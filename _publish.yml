@@ -1,0 +1,4 @@
+- source: project
+  netlify:
+    - id: 446b7808-6715-4195-90f3-71ae46794fe0
+      url: 'https://deluxe-queijadas-f0b525.netlify.app'

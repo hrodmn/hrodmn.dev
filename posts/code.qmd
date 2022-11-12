@@ -1,0 +1,15 @@
+---
+title: "code"
+format: html
+author: "Henry Rodman"
+date: "11/11/2022"
+draft: true
+---
+
+This is R code
+
+```{r}
+x <- 10 ^ 2
+```
+
+$10^2$ = `r x`
