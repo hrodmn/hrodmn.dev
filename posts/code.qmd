@@ -3,7 +3,7 @@ title: "code"
 format: html
 author: "Henry Rodman"
 date: "11/11/2022"
-draft: true
+draft: false
 ---
 
 This is R code
