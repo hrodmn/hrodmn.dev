@@ -1,7 +1,6 @@
 ---
-title: "code"
+title: "R code"
 format: html
-author: "Henry Rodman"
 date: "11/11/2022"
 draft: false
 ---
