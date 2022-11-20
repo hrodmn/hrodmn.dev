@@ -1,0 +1,12 @@
+black
+dask
+geogif
+jupyter
+pyproj
+pystac
+pystac_client
+rasterio
+shapely
+stackstac
+typing_extensions
+xarray
