@@ -2,12 +2,14 @@ project:
   type: website
 
 website:
-  title: "hrodmn.dev"
+  title: "Henry Rodman"
   navbar:
     left:
       - href: index.qmd
         text: Home
       - about.qmd
+      - href: posts/index.qmd
+        text: Posts
 
 format:
   html:

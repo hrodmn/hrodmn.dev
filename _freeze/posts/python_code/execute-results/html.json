@@ -1,0 +1,11 @@
+{
+  "hash": "4b03078d4396c7bc349610454a4f49f8",
+  "result": {
+    "markdown": "---\ntitle: \"Python code\"\nformat: html\ndate: \"11/20/2022\"\ndraft: false\n---\n\n::: {.cell execution_count=1}\n``` {.python .cell-code}\nimport rasterio\nimport stackstac\n```\n:::\n\n\n",
+    "supporting": [
+      "python_code_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

@@ -1,0 +1,78 @@
+---
+title: "Python code"
+format: html
+date: "11/20/2022"
+draft: false
+---
+
+```{python}
+from shapely.geometry import box
+from shapely.ops import transform
+import geogif
+import pyproj
+import pystac_client
+import stackstac
+
+STAC_URL = "https://earth-search.aws.element84.com/v0"
+STAC_COLLECTION = "sentinel-s2-l2a-cogs"
+
+CRS_STRING = "epsg:5070"
+EPSG = pyproj.CRS.from_string(CRS_STRING).to_epsg()
+AOI = box(373926, 2744693, 406338, 2765304)
+
+RESOLUTION = 100 # meters
+BANDS = ["B04", "B03", "B02"]
+START_DATE = "2022-09-01"
+END_DATE = "2022-10-31"
+```
+```{python}
+# STAC items store bounding box info in epsg:4326
+transformer_4326 = pyproj.Transformer.from_crs(
+    crs_from=CRS_STRING,
+    crs_to="epsg:4326",
+    always_xy=True,
+)
+
+bbox_4326 = transform(transformer_4326.transform, AOI).bounds
+```
+
+```{python}
+catalog = pystac_client.Client.open(STAC_URL)
+
+stac_items = catalog.search(
+    collections=[STAC_COLLECTION],
+    bbox=bbox_4326,
+    datetime=[START_DATE, END_DATE],
+).get_all_items()
+```
+
+```{python}
+stac_items[0]
+```
+
+
+```{python}
+sentinel_stack = stackstac.stack(
+    items=stac_items,
+    assets=BANDS,
+    epsg=EPSG,
+    resolution=RESOLUTION,
+    bounds=AOI.bounds,
+    xy_coords="center",
+)
+sentinel_stack
+```
+
+```{python}
+sentinel_daily = (
+    sentinel_stack
+    .resample(time="1D")
+    .median()
+)
+sentinel_daily
+```
+
+```{python}
+gif_img = geogif.dgif(sentinel_daily).compute()
+gif_img
+```
