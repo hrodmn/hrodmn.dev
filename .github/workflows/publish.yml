@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           cache: 'pip'
-        run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt
 
       - name: Render and Publish 
         uses: quarto-dev/quarto-actions/publish@v2
