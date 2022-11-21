@@ -72,7 +72,3 @@ sentinel_daily = (
 sentinel_daily
 ```
 
-```{python}
-gif_img = geogif.dgif(sentinel_daily).compute()
-gif_img
-```
