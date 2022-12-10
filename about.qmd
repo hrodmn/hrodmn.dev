@@ -1,5 +1,66 @@
 ---
 title: "About"
+about:
+  template: trestles
+  image: profile.jpg
+  image-shape: rectangle
+  links:
+    - icon: github
+      text: github
+      href: https://github.com/hrodmn
+    - icon: mastodon
+      text: mastodon
+      href: https://mas.to/@hrodmn
+    - icon: twitter
+      text: twitter
+      href: https://twitter.com/hrodmn
+
 ---
 
-About this site
+I am a data engineer at [NCX](https://ncx.com) where I spend my days writing
+code to run our natural capital marketplace. I have learned everything I know
+about programming from open-source developers, my coworkers at NCX, my
+classmates at OSU, and the many helpful and kind strangers that post their
+questions/answers/ideas on the internet.
+
+## Experience
+
+[NCX](https://ncx.com) | Data Engineer | Jan 2021 - present
+
+- Build and maintain data pipelines for processing geospatial data
+  - languages: Python and R
+  - tools: GDAL, STAC, xarray, Dask, MapReduce
+  - clouds: AWS and Azure
+  - CI/CD on GitHub Actions
+- Work with data scientists to deploy machine learning and Bayesian statistical
+models
+  - R packages: `brms`, `tidyverse`, `furrr`, `future`
+  - Python packages: `cmdstanpy`, `tsai`, `xgboost`
+- Work with platform team to distribute data products to users
+- Build systems up from POC to production
+
+---
+
+SilviaTerra | Forest Biometrician | June 2016 - Dec 2020
+
+- Designed processes for generating forest inventory using remote sensing data
+paired with on-the-ground measurements
+- Work with clients (industrial forest management companies) to understand their
+needs for forest inventory and how to provide the most useful data product for
+their operational needs
+
+## Education
+
+Oregon State University | Corvallis, OR
+
+M.S. in Sustainable Forest Management | Sep 2014 - June 2016
+
+---
+
+University of Minnesota | St. Paul, MN
+
+B.S. in Forest Resources | Sep 2011 - May 2014
+
+
+
+

@@ -1,8 +1,7 @@
 ---
 title: "Python code"
-format: html
 date: "11/20/2022"
-draft: true
+draft: false
 ---
 
 ```{python}

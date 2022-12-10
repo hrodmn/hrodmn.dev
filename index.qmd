@@ -1,7 +1,12 @@
 ---
-title: "hrodmn.dev"
+title: "Geospatial Data Wrangling"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
 ---
 
-This is a Quarto website.
-
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+This is a place for Python and R programmers interested in geospatial data.
+I write about the data sources and tools that I find useful and tricks that I
+have learned to use them more effectively!
