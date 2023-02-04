@@ -1,9 +1,10 @@
 ---
 title: "About"
 about:
-  template: trestles
+  template: marquee
   image: profile.jpg
   image-shape: rectangle
+  image-width: 20em
   links:
     - icon: github
       text: github
