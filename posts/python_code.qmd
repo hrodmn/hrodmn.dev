@@ -1,29 +1,53 @@
 ---
-title: "Python code"
-date: "11/20/2022"
+title: "STAC + stackstac"
+date: "2/4/2023"
 draft: false
 ---
+
+[`stackstac`](https://github.com/gjoseph92/stackstac) is a python package for
+making it dead simple to process data from a STAC using
+[`xarray`](https://xarray.dev/).
+When you use `stackstac`, you do not need to write any code to handle merging
+operations for many raster files.
+The data come out the other side in a neatly packaged `xarray` object with
+`x`, `y`, `time`, and `band` dimensions!
+This is very convenient when you are interested in an arbitrary area that may
+require combining data from many STAC items.
+The [`stackstac` documentation](https://stackstac.readthedocs.io/en/latest/) is
+very good, but I have put this demo together to highlight a few things that
+I really like about the package.
+
+### Step 1: get set
 
 ```{python}
 from shapely.geometry import box
 from shapely.ops import transform
-import geogif
 import pyproj
 import pystac_client
 import stackstac
+import xarray as xr
 
+# STAC connection information for Sentinel 2 COGs
 STAC_URL = "https://earth-search.aws.element84.com/v0"
 STAC_COLLECTION = "sentinel-s2-l2a-cogs"
 
+# spatial projection information
 CRS_STRING = "epsg:5070"
 EPSG = pyproj.CRS.from_string(CRS_STRING).to_epsg()
+
+# area of interest, somewhere in Minnesota
 AOI = box(373926, 2744693, 406338, 2765304)
 
+# a few more parameters
 RESOLUTION = 100 # meters
 BANDS = ["B04", "B03", "B02"]
 START_DATE = "2022-09-01"
 END_DATE = "2022-10-31"
 ```
+
+### Step 2: Query the STAC for matching items
+
+To query the STAC, we need to provide a bounding box in `epsg:4326` coordinates:
 ```{python}
 # STAC items store bounding box info in epsg:4326
 transformer_4326 = pyproj.Transformer.from_crs(
@@ -35,6 +59,8 @@ transformer_4326 = pyproj.Transformer.from_crs(
 bbox_4326 = transform(transformer_4326.transform, AOI).bounds
 ```
 
+This will return all of the STAC items that intersect the provided bounding box
+and time window:
 ```{python}
 catalog = pystac_client.Client.open(STAC_URL)
 
@@ -45,11 +71,17 @@ stac_items = catalog.search(
 ).get_all_items()
 ```
 
+The query yields many STAC items, each of which describes multiple COGs.
+Using other toos, we would need to write a bunch of code to make sure we combine
+the data correctly but with `stackstac` we can forget about that and just get on
+with our analysis!
+
 ```{python}
-stac_items[0]
+len(stac_items)
 ```
 
-
+### Step 3: 
+Lazily load the raster data into an `xarray.DataArray` using `stackstack.stack`:
 ```{python}
 sentinel_stack = stackstac.stack(
     items=stac_items,
@@ -62,12 +94,24 @@ sentinel_stack = stackstac.stack(
 sentinel_stack
 ```
 
+One thing to watch out for with `stackstac.stack` is that you will wind up with
+a distinct time coordinate for each STAC item that you pass in.
+To achieve the intuitive representation of the data, you need to flatten the
+`DataArray` with respect to time.
+
+**Note:** if you are only reading a single STAC item, the flattening code will
+inadvertently reduce your data along the `band` dimension (which is definitely
+not what you want!)
+
 ```{python}
-sentinel_daily = (
-    sentinel_stack
-    .resample(time="1D")
-    .median()
-)
-sentinel_daily
+def flatten(x, dim="time"):
+    assert isinstance(x, xr.DataArray)
+    if len(x[dim].values) > len(set(x[dim].values)):
+        x = x.groupby(dim).map(stackstac.mosaic, **kwargs)
+
+    return x
+
+flat_stack = flatten(sentinel_stack, dim="time")
+flat_stack
 ```
 
