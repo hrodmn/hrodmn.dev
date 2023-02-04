@@ -1,5 +1,82 @@
 ---
 title: "About"
+about:
+  template: trestles
+  image: profile.jpg
+  image-shape: rectangle
+  links:
+    - icon: github
+      text: github
+      href: https://github.com/hrodmn
+    - icon: mastodon
+      text: mastodon
+      href: https://mas.to/@hrodmn
+    - icon: twitter
+      text: twitter
+      href: https://twitter.com/hrodmn
+
 ---
 
-About this site
+I am a data engineer at [NCX](https://ncx.com) where I spend my days writing the
+code that runs our natural capital marketplace.
+I have learned everything I know about programming from open-source developers,
+my coworkers at NCX, my classmates at OSU, and the many helpful and kind
+strangers that post questions/answers/ideas on the internet!
+
+## Experience
+
+[NCX](https://ncx.com) | Data Engineer | Jan 2021 - present
+
+- Build and maintain data pipelines for processing geospatial data
+  - languages: Python, R
+  - tools: GDAL, STAC, PostgreSQL, xarray, Dask, MapReduce
+  - clouds: AWS and Azure
+  - CI/CD: GitHub Actions
+  - code review: GitHub pull requests
+- Design pipelines for processing, storing, and organizing raster and vector
+  data
+  - reprojection
+  - geometry operations
+  - cloud-optimized formats
+- Work with data scientists to deploy machine learning and Bayesian statistical
+  models
+  - R packages: `brms`, `tidyverse`, `furrr`, `future`
+  - Python packages: `fastai`, `tsai`, `xgboost`, `cmdstanpy`
+- Work with platform team to distribute data products to NCX's Landowner
+  Platform
+  - collaborate with platform engineers to define and maintain API endpoints for
+    the data processing pipeline
+- Build systems up from POC to production
+  - discover existing data that can help solve a business problem 
+  - develop minimal methods for distilling raw data into useful information
+  - rapidly iterate until reaching a workable solution for the problem at hand
+
+---
+
+SilviaTerra | Forest Biometrician | June 2016 - Dec 2020
+
+- Design processes for generating forest inventory using remote sensing data
+paired with on-the-ground measurements
+  - train statistical models to predict forest structure as a function of
+    remotely-sensed information and demographic information about the forest
+  - build and maintain the infrastructure for summarizing the model predictions
+    into a deliverable format
+- Work with clients (industrial forest management companies) to understand their
+needs for forest inventory and how to provide the most useful data product for
+their operational needs
+
+## Education
+
+Oregon State University | Corvallis, OR
+
+M.S. in Sustainable Forest Management | Sep 2014 - June 2016
+
+---
+
+University of Minnesota | St. Paul, MN
+
+B.S. in Forest Resources | Sep 2011 - May 2014
+
+
+
+
