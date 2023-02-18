@@ -3,11 +3,19 @@ project:
 
 website:
   title: "Henry Rodman"
+  site-url: https://hrodmn.dev
+  repo-url: https://github.com/hrodmn/hrodmn.dev
+  repo-actions: [source]
   navbar:
     left:
       - href: index.qmd
         text: Home
       - about.qmd
+    right:
+      - icon: github
+        href: https://github.com/hrodmn/
+      - icon: rss
+        href: index.xml
 
 format:
   html:
@@ -17,4 +25,3 @@ format:
 
 execute:
   freeze: auto
-  cache: true
