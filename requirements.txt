@@ -2,6 +2,7 @@ black
 dask
 geogif
 jupyter
+jupyter-cache
 pyproj
 pystac
 pystac_client
