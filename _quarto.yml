@@ -8,11 +8,8 @@ website:
   repo-actions: [source]
   google-analytics: "G-3F77E5H78E"
   navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
     right:
+      - about.qmd
       - icon: github
         href: https://github.com/hrodmn/
       - icon: rss
