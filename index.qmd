@@ -5,8 +5,13 @@ listing:
   sort: "date desc"
   type: default
   categories: true
+  feed: true
 ---
 
 This is a place for Python and R programmers interested in geospatial data.
 I write about the data sources and tools that I find useful and tricks that I
-have learned to use them more effectively!
+have learned to use them more effectively! Most of the code that I write is in
+private repositories so this is one way that I can share a bit about what I do
+and what interests me.
+
+<a rel="me" href="https://mas.to/@hrodmn"></a>

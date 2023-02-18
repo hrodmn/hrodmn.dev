@@ -1,7 +1,8 @@
 ---
 title: "STAC + stackstac + xarray"
-date: "2/4/2023"
+date: "2/18/2023"
 draft: false
+image: "best_day.png"
 ---
 
 [`stackstac`](https://github.com/gjoseph92/stackstac) is a python package for
@@ -42,7 +43,7 @@ AOI = box(373926, 2744693, 406338, 2765304)
 
 # a few more parameters
 RESOLUTION = 100  # meters
-BANDS = ["B04", "B03", "B02", 1]
+BANDS = ["B04", "B03", "B02"]
 START_DATE = "2022-09-01"
 END_DATE = "2022-09-30"
 ```
@@ -189,6 +190,9 @@ flat_stack.sel(band=["B04", "B03", "B02"], time="2022-09-28").plot.imshow(
 ### Whats next?
 This is really just scratching the surface of what you can do with `xarray`,
 I will try to cover some more advanced topics in later posts.
+
+
+
 
 
 
