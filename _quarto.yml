@@ -6,6 +6,7 @@ website:
   site-url: https://hrodmn.dev
   repo-url: https://github.com/hrodmn/hrodmn.dev
   repo-actions: [source]
+  google-analytics: "G-3F77E5H78E"
   navbar:
     left:
       - href: index.qmd
