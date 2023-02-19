@@ -1,0 +1,189 @@
+https://lpdaac.usgs.gov/resources/e-learning/getting-started-cloud-native-hls-data-python/
+https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/
+
+```{python}
+import pandas as pd
+import pyproj
+import pystac
+import pystac_client
+import stackstac
+import xarray as xr
+from shapely.geometry import box
+from shapely.ops import transform
+
+```
+
+```{python}
+CMR_STAC_URL = "https://cmr.earthdata.nasa.gov/stac/LPCLOUD"
+HLS_COLLECTIONS = ["HLSL30.v2.0", "HLSS30.v2.0"]
+```
+
+```{python}
+START_DATE = "2022-09-01"
+END_DATE = "2022-09-30"
+CRS_STRING = "epsg:5070"
+EPSG = pyproj.CRS.from_string(CRS_STRING).to_epsg()
+AOI = box(326000, 2771000, 337000, 2778000)
+
+# STAC items store bounding box info in epsg:4326
+transformer_4326 = pyproj.Transformer.from_crs(
+    crs_from=CRS_STRING,
+    crs_to="epsg:4326",
+    always_xy=True,
+)
+
+bbox_4326 = transform(transformer_4326.transform, AOI).bounds
+```
+
+```{python}
+catalog = pystac_client.Client.open(CMR_STAC_URL)
+
+stac_items = catalog.search(
+    collections=HLS_COLLECTIONS,
+    bbox=bbox_4326,
+    datetime=[START_DATE, END_DATE],
+).get_all_items()
+```
+
+The Sentinel and Landsat items have different band IDs! Let's make some
+modifications to the STAC item metadata so that we can load them all in a
+congruent way.
+
+https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-spectral-bands
+
+```{python}
+BAND_CROSSWALK = {
+    "HLSL30.v2.0": {
+        "B01": "coastal aerosol",
+        "B02": "blue",
+        "B03": "green",
+        "B04": "red",
+        "B05": "nir narrow",
+        "B06": "swir1",
+        "B07": "swir2",
+        "B09": "cirrus",
+        "B10": "thermal infrared 1",
+        "B11": "thermal",
+    },
+    "HLSS30.v2.0": {
+        "B01": "coastal aerosol",
+        "B02": "blue",
+        "B03": "green",
+        "B04": "red",
+        "B05": "red-edge 1",
+        "B06": "red-edge 2",
+        "B07": "red-edge 3",
+        "B08": "nir broad",
+        "B8A": "nir narrow",
+        "B09": "water vapor",
+        "B10": "cirrus1",
+        "B11": "swir 1",
+        "B12": "swir 2",
+    },
+}
+```
+
+```{python}
+for item in stac_items:
+    for original_band, new_band in BAND_CROSSWALK.get(item.collection_id).items():
+        item.assets[new_band] = item.assets.pop(original_band)
+```
+
+Split the items up by collection
+
+
+```{python}
+hls_stack_raw = stackstac.stack(
+    stac_items,
+    assets=["red", "green", "blue", "nir narrow"],
+    bounds=AOI.bounds,
+    epsg=EPSG,
+    resolution=30,
+    xy_coords="center",
+)
+
+```
+
+```{python}
+def flatten(x, dim="time"):
+    assert isinstance(x, xr.DataArray)
+    if len(x[dim].values) > len(set(x[dim].values)):
+        x = x.groupby(dim).map(stackstac.mosaic)
+
+    return x
+
+
+# round time coordinates so all observations from the same day so they have
+# equivalent timestamps
+hls_stack_rounded = hls_stack_raw.assign_coords(
+    time=hls_stack_raw.time.astype("datetime64[D]"),
+)
+
+# mosaic along time dimension
+hls_stack_flat = flatten(hls_stack_rounded, dim="time")
+hls_stack_flat
+
+```
+
+We get 14 observations for the month of September!
+Compare that to the number of observations for either Sentinel or Landsat
+```{python}
+items_by_collection = {
+    collection: pystac.ItemCollection(
+        [item for item in stac_items if item.collection_id == collection]
+    )
+    for collection in HLS_COLLECTIONS
+}
+
+stacks_by_collection = {}
+for collection, collection_items in items_by_collection.items():
+    raw_stack = stackstac.stack(
+        collection_items,
+        assets=["red", "green", "blue", "nir narrow"],
+        bounds=AOI.bounds,
+        epsg=EPSG,
+        resolution=30,
+        xy_coords="center",
+    )
+    stack_rounded = raw_stack.assign_coords(
+        time=raw_stack.time.astype("datetime64[D]"),
+    )
+    stacks_by_collection[collection] = flatten(stack_rounded, dim="time")
+
+```
+
+Landsat:
+```{python}
+stacks_by_collection["HLSL30.v2.0"]
+```
+
+Sentinel:
+```{python}
+stacks_by_collection["HLSS30.v2.0"]
+```
+
+It appears that there are two days where **both** satellites scanned this area!
+We can combine them along a new dimension called `"sensor"` to make it easy to
+look at the images with respect to sensor and time.
+```{python}
+sensor_stack = xr.concat(
+    [stacks_by_collection["HLSL30.v2.0"], stacks_by_collection["HLSS30.v2.0"]],
+    pd.Index(["Landsat", "Sentinel"], name="sensor"),
+)
+sensor_stack
+```
+
+```{python}
+sensor_stack.sel(band=["red", "green", "blue"]).plot.imshow(
+    col="collection",
+    row="time",
+    rgb="band",
+    robust=True,
+    size=4,
+    vmin=0,
+    vmax=1000,
+    add_labels=False,
+)
+
+`
+``
