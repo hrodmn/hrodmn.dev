@@ -22,6 +22,18 @@ jobs:
           cache: 'pip'
       - run: pip install -r requirements.txt
 
+      - name: Make .netrc
+        env:
+          NETRC_LOGIN: ${{ secrets.NETRC_LOGIN }}
+          NETRC_PASSWORD: ${{ secrets.NETRC_PASSWORD }}
+        run: |
+          cat <<EOT > ~/.netrc
+          machine urs.earthdata.nasa.gov
+          login ${NETRC_LOGIN}
+          password ${NETRC_PASSWORD}
+          EOT
+
+
       - name: Render and Publish 
         uses: quarto-dev/quarto-actions/publish@v2
         with:
