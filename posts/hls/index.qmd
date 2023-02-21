@@ -1,7 +1,20 @@
-https://lpdaac.usgs.gov/resources/e-learning/getting-started-cloud-native-hls-data-python/
-https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/
+---
+title: "Harmonized Landsat Sentinel: Your new favorite remote sensing dataset"
+date: "2/22/2023"
+draft: false
+# image: 
+---
+
+The Harmonized Landsat Sentinel dataset is a very powerful publicly accessible
+source for 30 meter spectral satellite imagery.
+Produced by NASA, it combines the independently powerful Landsat and Sentinel 2
+satellite observation systems into one analysis-ready dataset.
 
 ```{python}
+import datetime
+import itertools
+from collections import defaultdict
+
 import pandas as pd
 import pyproj
 import pystac
@@ -16,13 +29,15 @@ from shapely.ops import transform
 ```{python}
 CMR_STAC_URL = "https://cmr.earthdata.nasa.gov/stac/LPCLOUD"
 HLS_COLLECTIONS = ["HLSL30.v2.0", "HLSS30.v2.0"]
+
+catalog = pystac_client.Client.open(CMR_STAC_URL)
 ```
 
 ```{python}
-START_DATE = "2022-09-01"
-END_DATE = "2022-09-30"
 CRS_STRING = "epsg:5070"
 EPSG = pyproj.CRS.from_string(CRS_STRING).to_epsg()
+
+# the Little Triangle
 AOI = box(326000, 2771000, 337000, 2778000)
 
 # STAC items store bounding box info in epsg:4326
@@ -35,8 +50,42 @@ transformer_4326 = pyproj.Transformer.from_crs(
 bbox_4326 = transform(transformer_4326.transform, AOI).bounds
 ```
 
+Query the STAC catalog for the entire time series
 ```{python}
-catalog = pystac_client.Client.open(CMR_STAC_URL)
+hls_history_search = catalog.search(
+    collections=HLS_COLLECTIONS,
+    bbox=bbox_4326,
+)
+
+all_items = []
+for page in hls_history_search.pages():
+    all_items.extend(page.items)
+
+collection_history = {collection: defaultdict(list) for collection in HLS_COLLECTIONS}
+
+for item in all_items:
+    year_month = pd.Timestamp(item.datetime.date()) + pd.offsets.MonthEnd()
+    entry = collection_history[item.collection_id][year_month]
+    if (date := item.datetime.date()) not in entry:
+        entry.append(date)
+
+# get count of images by year/sensor
+collection_counts = pd.DataFrame(
+    {
+        collection: {
+            year_month: len(dates) for year_month, dates in year_months.items()
+        }
+        for collection, year_months in collection_history.items()
+    }
+).fillna(0)
+
+collection_counts.plot.line()
+```
+
+
+```{python}
+START_DATE = "2022-07-01"
+END_DATE = "2022-07-31"
 
 stac_items = catalog.search(
     collections=HLS_COLLECTIONS,
@@ -81,6 +130,8 @@ BAND_CROSSWALK = {
         "B12": "swir 2",
     },
 }
+
+BANDS = ["red", "green", "blue", "Fmask"]
 ```
 
 ```{python}
@@ -89,20 +140,6 @@ for item in stac_items:
         item.assets[new_band] = item.assets.pop(original_band)
 ```
 
-Split the items up by collection
-
-
-```{python}
-hls_stack_raw = stackstac.stack(
-    stac_items,
-    assets=["red", "green", "blue", "nir narrow"],
-    bounds=AOI.bounds,
-    epsg=EPSG,
-    resolution=30,
-    xy_coords="center",
-)
-
-```
 
 ```{python}
 def flatten(x, dim="time"):
@@ -113,19 +150,9 @@ def flatten(x, dim="time"):
     return x
 
 
-# round time coordinates so all observations from the same day so they have
-# equivalent timestamps
-hls_stack_rounded = hls_stack_raw.assign_coords(
-    time=hls_stack_raw.time.astype("datetime64[D]"),
-)
-
-# mosaic along time dimension
-hls_stack_flat = flatten(hls_stack_rounded, dim="time")
-hls_stack_flat
-
 ```
 
-We get 14 observations for the month of September!
+We get 16 days with observations for the month of July!
 Compare that to the number of observations for either Sentinel or Landsat
 ```{python}
 items_by_collection = {
@@ -139,7 +166,7 @@ stacks_by_collection = {}
 for collection, collection_items in items_by_collection.items():
     raw_stack = stackstac.stack(
         collection_items,
-        assets=["red", "green", "blue", "nir narrow"],
+        assets=BANDS,
         bounds=AOI.bounds,
         epsg=EPSG,
         resolution=30,
@@ -167,15 +194,22 @@ We can combine them along a new dimension called `"sensor"` to make it easy to
 look at the images with respect to sensor and time.
 ```{python}
 sensor_stack = xr.concat(
-    [stacks_by_collection["HLSL30.v2.0"], stacks_by_collection["HLSS30.v2.0"]],
-    pd.Index(["Landsat", "Sentinel"], name="sensor"),
+    list(stacks_by_collection.values()),
+    dim=pd.Index(["Landsat", "Sentinel"], name="sensor"),
 )
 sensor_stack
 ```
 
 ```{python}
-sensor_stack.sel(band=["red", "green", "blue"]).plot.imshow(
-    col="collection",
+sensor_stack = sensor_stack.compute()
+```
+
+
+```{python}
+sensor_stack.sel(
+    band=["red", "green", "blue"], sensor=["Landsat", "Sentinel"]
+).plot.imshow(
+    col="sensor",
     row="time",
     rgb="band",
     robust=True,
@@ -185,5 +219,133 @@ sensor_stack.sel(band=["red", "green", "blue"]).plot.imshow(
     add_labels=False,
 )
 
-`
-``
+```
+
+Cloud/shadow masking
+See Appendix A of https://lpdaac.usgs.gov/documents/1326/HLS_User_Guide_V2.pdf
+```{python}
+def get_valid_fmask_ints(valid_conditions: dict):
+
+    # enumerate all possible binary values
+    all_binary_values = list(itertools.product([0, 1], repeat=8))
+
+    mapping = {
+        "aerosol": slice(0, 2),
+        "water": 2,
+        "snow_ice": 3,
+        "cloud_shadow": 4,
+        "adjacent_to_cloud_shadow": 5,
+        "cloud": 6,
+        "cirrus": 7,
+    }
+
+    valid_ints = []
+    for binary_value in all_binary_values:
+        n_acceptable = 0
+        for key, acceptable_value in valid_conditions.items():
+            if binary_value[mapping[key]] == acceptable_value:
+                n_acceptable += 1
+        # if all of the valid constraints are met, add this one to the list!
+        if n_acceptable == len(valid_conditions):
+            binary_str = "".join([str(val) for val in binary_value])
+            valid_ints.append(int(binary_str, base=2))
+
+    return valid_ints
+
+
+```
+
+```{python}
+valid_fmask_ints = get_valid_fmask_ints(
+    valid_conditions={"cloud_shadow": 0, "adjacent_to_cloud_shadow": 0, "cloud": 0}
+)
+```
+
+```{python}
+fmask = sensor_stack.sel(band=["Fmask"]).squeeze(dim="band")
+fmask.sel(sensor=["Landsat", "Sentinel"]).plot.imshow(
+    col="sensor",
+    row="time",
+    cmap="tab20",
+    size=4,
+    add_labels=False,
+)
+```
+
+Show valid/invalid pixels for each sensor/date
+```{python}
+fmask.sel(sensor=["Landsat", "Sentinel"]).isin(valid_fmask_ints).plot.imshow(
+    col="sensor",
+    row="time",
+    size=4,
+    add_labels=False,
+)
+```
+
+Check to see if we have at least one valid observation for every pixel
+```{python}
+fmask.isin(valid_fmask_ints).any(dim="time").plot.imshow(
+    col="sensor",
+    size=4,
+    add_labels=False,
+    vmin=0,
+    vmax=1,
+)
+```
+
+Get cloud-free mosaic for each sensor
+```{python}
+sensor_cloud_free = sensor_stack.where(
+    sensor_stack.sel(band="Fmask").isin(valid_fmask_ints)
+).median(dim="time", skipna=True)
+
+sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
+    col="sensor",
+    rgb="band",
+    robust=True,
+    size=4,
+    vmin=0,
+    vmax=1000,
+    add_labels=False,
+)
+
+```
+
+
+
+```{python}
+hls_stack_raw = stackstac.stack(
+    stac_items,
+    assets=BANDS,
+    bounds=AOI.bounds,
+    epsg=EPSG,
+    resolution=30,
+    xy_coords="center",
+)
+
+hls_cloud_free = (
+    hls_stack_raw.where(hls_stack_raw.sel(band="Fmask").isin(valid_fmask_ints))
+    .resample(time="1M")
+    .median(skipna=True)
+    .squeeze(dim="time")
+)
+hls_cloud_free
+
+```
+
+```{python}
+# | warning: false
+# | message: false
+
+hls_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
+    rgb="band",
+    robust=True,
+    size=6,
+    vmin=0,
+    vmax=1000,
+    add_labels=False,
+)
+
+```
+
+
