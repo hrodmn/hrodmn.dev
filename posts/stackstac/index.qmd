@@ -1,13 +1,13 @@
 ---
 title: "STAC + stackstac + xarray"
 date: "2/18/2023"
-draft: false
 image: "best_day.png"
 ---
 
 [`stackstac`](https://github.com/gjoseph92/stackstac) is a python package for
 making it dead simple to process data from a STAC using
 [`xarray`](https://xarray.dev/).
+
 When you use `stackstac`, you do not need to write any code to handle merging
 operations for many raster files.
 The data come out the other side in a neatly packaged `xarray` object with
@@ -190,6 +190,10 @@ flat_stack.sel(band=["B04", "B03", "B02"], time="2022-09-28").plot.imshow(
 ### Whats next?
 This is really just scratching the surface of what you can do with `xarray`,
 I will try to cover some more advanced topics in later posts.
+
+
+
+
 
 
 
