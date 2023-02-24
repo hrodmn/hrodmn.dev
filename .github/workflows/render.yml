@@ -15,14 +15,15 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
       
+      - name: Install system dependencies
+        run: apt install ghostscript
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           cache: 'pip'
-      - run: |
-        apt install ghostscript
-        pip install -r requirements.txt
+      - run: pip install -r requirements.txt
 
       - name: Make .netrc
         env:
