@@ -1,15 +1,14 @@
 ---
-title: "Harmonized Landsat Sentinel: Your new favorite remote sensing dataset"
-date: "2/22/2023"
-draft: false
-execute:
-  cache: true
-# image: 
+title: "HLS: Your new favorite remote sensing dataset"
+date: "2/24/2023"
+image: "hls.png"
 ---
 
 The [Harmonized Landsat Sentinel 2 (HLS) dataset](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/)
 is a very powerful publicly accessible source for 30 meter spectral satellite
-imagery. Produced by NASA, it combines the independently powerful Landsat 8/9
+imagery.
+
+Produced by NASA, it combines the independently powerful Landsat 8/9
 and Sentinel 2 satellite observation systems into one analysis-ready dataset.
 Some of the best features include:
 * More rich time series than either Sentinel 2 or Landsat individually
@@ -512,6 +511,17 @@ sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
 )
 
 ```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
