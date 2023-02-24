@@ -14,16 +14,18 @@ jobs:
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
-      
-      - name: Install system dependencies
-        run: sudo apt update && sudo apt install ghostscript
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           cache: 'pip'
-      - run: pip install -r requirements.txt
+
+      - name: Install system dependencies
+        run: sudo apt update && sudo apt install ghostscript
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
 
       - name: Make .netrc
         env:
@@ -38,4 +40,9 @@ jobs:
 
 
       - name: Render
+        env:
+          CPL_VSIL_CURL_USE_HEAD: FALSE
+          GDAL_DISABLE_READDIR_ON_OPEN: YES
+          GDAL_HTTP_COOKIEJAR: /tmp/cookies.txt
+          GDAL_HTTP_COOKIEFILE: /tmp/cookies.txt
         uses: quarto-dev/quarto-actions/render@v2
