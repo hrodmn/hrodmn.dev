@@ -5,8 +5,7 @@ image: "hls.png"
 ---
 
 The [Harmonized Landsat Sentinel 2 (HLS) dataset](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/)
-is a very powerful publicly accessible source for 30 meter spectral satellite
-imagery.
+is an awesome public source for 30 meter spectral satellite imagery.
 
 Produced by NASA, it combines the independently powerful Landsat 8/9
 and Sentinel 2 satellite observation systems into one analysis-ready dataset.
@@ -104,6 +103,7 @@ transformer_4326 = pyproj.Transformer.from_crs(
 bbox_4326 = transform(transformer_4326.transform, AOI).bounds
 ```
 
+## Explore the data
 
 ### check out this time series!
 We can query the STAC catalog for the entire time series by searching the
@@ -211,6 +211,8 @@ BAND_CROSSWALK = {
 BANDS = ["red", "green", "blue", "Fmask"]
 ```
 
+## Make a cloud-free mosaic
+
 ### search the STAC
 Now we are going to search the STAC again but this time with a `datetime`
 specification to limit our search to July 2022.
@@ -289,7 +291,7 @@ valid_fmask_ints = get_valid_fmask_ints(
 )
 ```
 
-### make a cloud-free mosaic
+### get the cloud-free mosaic
 It is very easy to generate a cloud-free mosaic for a specific time range
 (e.g. monthly).
 For example, we can take the median value from all valid pixels within a given
@@ -318,11 +320,11 @@ Plot the image and bask in the cloud-free beauty:
 ```{python}
 # | warning: false
 # | message: false
-# | column: screen
+# | column: page
 hls_cloud_free.squeeze(dim="time").sel(band=["red", "green", "blue"]).plot.imshow(
     rgb="band",
     robust=True,
-    size=8,
+    size=7,
     vmin=0,
     vmax=1000,
     add_labels=False,
@@ -331,7 +333,7 @@ hls_cloud_free.squeeze(dim="time").sel(band=["red", "green", "blue"]).plot.imsho
 ```
 
 
-## Load the Landsat and Sentinel collections separately
+## Analyze the Landsat and Sentinel collections separately
 To illustrate the power of the full HLS dataset and the advantage of the
 high density of collections in a short time, lets load the imagery for each
 sensor separately and create a cloud-free mosaic for July 2022 for each one.
@@ -412,7 +414,7 @@ flattened_by_day = xr.concat(
 
 Now when we plot the images we only have one observation per day per sensor.
 ```{python}
-# | column: screen
+# | column: page
 flattened_by_day.sel(band=["red", "green", "blue"]).plot.imshow(
     col="sensor",
     row="time",
@@ -427,7 +429,7 @@ flattened_by_day.sel(band=["red", "green", "blue"]).plot.imshow(
 
 Now let's look at the raw `Fmask` values for all of the images.
 ```{python}
-# | column: screen
+# | column: page
 fmask = flattened_by_day.sel(band=["Fmask"]).squeeze(dim="band")
 fmask.sel(sensor=["Landsat", "Sentinel"]).plot.imshow(
     col="sensor",
@@ -444,7 +446,7 @@ peach categories represent non-cloudy land and water respectively.
 
 Check out the valid/invalid binary values for each sensor/date:
 ```{python}
-# | column: screen
+# | column: page
 fmask.isin(valid_fmask_ints).plot.imshow(
     col="sensor",
     row="time",
@@ -472,7 +474,7 @@ full_stack = xr.concat([sensor_stack, combined_stack], dim="sensor")
 
 Would we have at least one valid observation for every pixel?
 ```{python}
-# | column: screen
+# | column: page
 has_valid = full_stack.sel(band="Fmask").isin(valid_fmask_ints).any(dim="time")
 has_valid.plot.imshow(
     col="sensor",
@@ -495,7 +497,7 @@ observations from hundreds down to only three!
 
 Get cloud-free mosaic for each sensor and the combined set side-by-side.
 ```{python}
-# | column: screen
+# | column: page
 sensor_cloud_free = full_stack.where(
     full_stack.sel(band="Fmask").isin(valid_fmask_ints)
 ).median(dim="time", skipna=True)
@@ -511,6 +513,8 @@ sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
 )
 
 ```
+
+
 
 
 
