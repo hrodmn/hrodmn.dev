@@ -16,7 +16,7 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
       
       - name: Install system dependencies
-        run: apt install ghostscript
+        run: sudo apt update && sudo apt install ghostscript
 
       - name: Set up Python
         uses: actions/setup-python@v4
