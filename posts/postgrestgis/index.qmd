@@ -1,0 +1,80 @@
+---
+title: "PostgREST + PostGIS"
+date: "2/24/2023"
+freeze: true
+engine: knitr
+cache: false
+---
+
+```{bash}
+POSTGRES_USER=postgrestgis \
+  POSTGRES_PASS=password \
+  POSTGRES_DB=postgrestgis \
+  POSTGRESTGIS_PORT=25432 \
+  docker-compose up -d
+
+# pause to make sure the docker network gets up and running
+sleep 15s
+```
+
+Send some queries using curl:
+```{bash}
+# run a query to get id == 1
+curl "http://localhost:3000/plot?id=eq.1" -H "Accept: application/geo+json" --silent
+```
+
+Try writing data to the `plot` table. It doesn't work! That's a good thing.
+```{bash}
+# can't write data to plot table (which is good)
+curl http://localhost:3000/plot -X POST -H "Content-Type: application/json" \
+  -d '{"lon": -90.0, "lat": 45.0}' \
+   --silent
+```
+
+To send a query from python:
+```{python}
+# import geopandas as gpd
+import requests
+
+bbox = (-95.9190, 45.7978, -90.6841, 48.1250)
+r = requests.post(
+    "http://localhost:3000/rpc/query_bbox",
+    json={"xmin": bbox[0], "xmax": bbox[1], "ymin": bbox[2], "ymax": bbox[3]},
+    headers={"Accept": "application/geo+json"},
+)
+
+# load into geopandas GeoDataFrame
+# gdf = gpd.GeoDataFrame.from_features(r.json(), crs=4326)
+# gdf
+r.json()
+```
+
+Shut down the docker network
+```{bash}
+docker stop postgrestgis_server_1 postgrestgis_swagger_1 postgrestgis_db_1
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
