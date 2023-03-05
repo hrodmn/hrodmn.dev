@@ -1,8 +1,8 @@
 ---
 title: "PostgREST + PostGIS"
-# date: "2/24/2023"
-freeze: true
-cache: true
+date: "3/5/2023"
+freeze: false
+cache: false
 filters:
    - include-code-files
 ---
@@ -19,52 +19,165 @@ you can turn it into a geospatial API with user-defined SQL functions.
 
 In this article I will walk through an example for setting up a PostGIS-enabled
 database and getting PostGREST running with a bounding box query.
+This process is basically identical to the one described in the
+[first PostGREST tutorial](https://postgrest.org/en/stable/tutorials/tut0.html#step-4-create-database-for-api)
+but with a side of PostGIS sizzle.
 The example database + endpoint runs in a docker network that you can fire up
-locally for yourself, all of the files are availble
+locally for yourself.
+I based this workflow off of the
+[docker-only setup](https://postgrest.org/en/stable/install.html#containerized-postgrest-and-db-with-docker-compose)
+in the PostgREST docs.
+All of the files used to get this system running are available
 [on GitHub](https://github.com/hrodmn/hrodmn.dev/blob/main/posts/postgrestgis/):
-* [`setup_db.sql`](setup_db.sql): SQL script for setting up the database
-* [`docker-compose.yml`](docker-compose.yml): docker compose file for setting up
+
+* [`setup_db.sql`](setup_db.sql): SQL script for setting up the database that
+gets run every time we fire up the docker network
+
+* [`docker-compose.yml`](docker-compose.yml): docker compose file for firing up
 the docker network
 
 ## Set up a database
+To demonstrate the geospatial query possibilities of PostGREST, we to set up a
+PostGIS-enabled database.
+This process is defined in `setup_db.sql` which gets run every time we launch
+the docker network.
+For a real application, you probably would not want to initiate the database
+from scratch everytime but it is convenient for this example.
 
-```{.python include="setup_db.sql" start-line=1 end-line=12}
+### add records to the `plot` table
+First, we create a single table called `plot` that has an ID column (`id`),
+longitude/latitude (`lon`/`lat`), and a geometry column (`geom`):
+
+```{.sql include="setup_db.sql" start-line=1 end-line=12}
 ```
 
-```{.python include="docker-compose.yml"}
+Once the table is set up we can generate 1000 random coordinates that fall in a
+bounding box that roughly covers CONUS.
+After the `lon`/`lat` values are populated, construct the `geom` values using
+the PostGIS functions `st_setsrid` and `st_makepoint`:
+
+```{.sql include="setup_db.sql" start-line=13 end-line=22}
 ```
 
-Build the docker network using
-[postgrestgis docker-compose.yml](docker-compose.yml)
+### set up credentials for API
+The PostgREST API will access the database using a pre-defined user credential.
+The details for what you need for your specific use-case may vary, but this
+method (pulled straight out of the PostGREST docs) will generate a read-only
+user account that has `select` privelges for the `plot` table.
 
+```{.sql include="setup_db.sql" start-line=23 end-line=28}
+```
+
+### define `query_bbox` function
+PostGREST opens up a powerful querying API out-of-the-box, but if you want to
+use any of the PostGIS functions you need to create use user-defined functions.
+The function `query_bbox` takes a set of bounding box coordinates (`xmin`,
+`ymin`, `xmax`, `ymax`) and returns all of the `plot` records that fall within
+the bounding box.
+When you send a request to this endpoint, the records (`setof api.plot`) will be
+returned as JSON:
+
+```{.sql include="setup_db.sql" start-line=29 end-line=43}
+```
+
+## Define the docker network
+This docker network consists of two services: `server` and `db`.
+Wrapping the whole thing in a docker network is convenient for local testing but
+I would not recommend it for any kind of production deployment!
+
+### `db`: PostGIS database
+I used the [`kartoza/postgis`](https://hub.docker.com/r/kartoza/postgis/) docker
+image and followed the docs to get this configuration.
+One helpful trick is to mount `setup_db.sql` into the
+`docker-entrypoint-initdb.d` directory to make it easy to initiate the database
+from a script.
+You can set up the docker-network.yml to use environment variables that might be
+shared across multiple services (i.e. `server`).
+In this case, only `POSTGRES_DB` gets used by both services.
+
+* `IGNORE_INIT_HOOK_LOCKFILE`: to make sure the `setup_db.sql` script runs every
+time you launch the docker network (useful for debugging).
+
+```{.yml include="docker-compose.yml" start-line=14 end-line=29 dedent=2}
+```
+Once `db` is up and running, the username:password  combo 
+`authenticator:mysecretpassword` is available to the PostgREST endpoint
+
+### `server`: PostgREST server
+Conveniently, there is a
+[`postgrest` docker image](https://hub.docker.com/r/postgrest/postgrest) 
+that can be configured to work with an existing database using environment
+variables only!
+
+* `PGRST_DB_URI`: the database connection URI with the credentials that we set
+up in `setup_db.sql` for the API connection (`authenticator:mysecretpassword`)
+  * note: the `host:port` for this connection references the location within
+  the docker network (`db:5432`) rather than some real network location, which
+  is convenient in this case because the containerized database is already
+  configured for access by other services within the docker network.
+
+* `PGRST_DB_SCHEMAS`: name(s) of schemas that PostGREST can use
+
+* `PGRST_DB_ANON_ROLE`: database role to be used by PostGREST, needs to match
+the one that we defined in `setup_db.sql`
+
+* `PGRST_OPENAPI_SERVER_PROXY_URI`: URI for the database endpoint, set to use
+the same local port that we mapped using `ports`
+
+```{.yml include="docker-compose.yml" start-line=3 end-line=13 dedent=2}
+```
+
+## Get it running
+Build the docker network:
 ```{python}
+# | output: false
 !POSTGRES_USER=postgrestgis \
   POSTGRES_PASS=password \
   POSTGRES_DB=postgrestgis \
   POSTGRESTGIS_PORT=25432 \
   docker-compose up -d
 
-# pause to make sure the docker network gets up and running
+# pause to make sure the docker network gets up and running before we run any
+# queries
 !sleep 15s
 ```
+Now that the database and PostgREST server are running we can send queries to 
+the database.
 
-Send some queries using curl:
+### query using `curl`
+The [PostGREST API docs](https://postgrest.org/en/stable/api.html) has an
+extensive guide to interacting with the API, so definitely check that out.
+
+This query will pull the first 10 records from the `plot` table:
+```{python}
+!curl "http://localhost:3000/plot?limit=10" -H "Accept: application/json" --silent
+```
+
+This query uses the API to select the row where `id` is `1`:
 ```{python}
 # run a query to get id == 1
 !curl "http://localhost:3000/plot?id=eq.1" -H "Accept: application/geo+json" --silent
 ```
 
-Try writing data to the `plot` table. It doesn't work! That's a good thing.
+* note: we asked for the result to be returned as a GeoJSON with the `Accept`
+header!
+
+Try writing data to the `plot` table.
 ```{python}
-# can't write data to plot table (which is good)
 !curl http://localhost:3000/plot -X POST -H "Content-Type: application/json" \
   -d '{"lon": -90.0, "lat": 45.0}' \
    --silent
 ```
+It doesn't work!
+That's a good thing.
+We could have set up the API's credentials with write privileges but we did not,
+so this is exactly what we want to see.
 
-To send a query from python:
+### query using Python
+We can use the `requests` library to send queries to PostgREST, too.
+This query uses the `query_bbox` function that we defined in `setup_db.sql`,
+which is conveniently set up as an endpoint in our API.
 ```{python}
-import geopandas as gpd
 import requests
 
 bbox = (-95.9190, 45.7978, -90.6841, 48.1250)
@@ -73,14 +186,23 @@ r = requests.post(
     json={"xmin": bbox[0], "xmax": bbox[1], "ymin": bbox[2], "ymax": bbox[3]},
     headers={"Accept": "application/geo+json"},
 )
+```
 
-# load into geopandas GeoDataFrame
+* note: all user-defined functions get dropped under the `rpc/` prefix, see the
+[docs](https://postgrest.org/en/stable/api.html#stored-procedures) for more info
+
+Since we requested the data be returned in the GeoJSON format, we can load the
+returned data into a `geopandas.GeoDataFrame` very easily:
+```{python}
+import geopandas as gpd
+
 gdf = gpd.GeoDataFrame.from_features(r.json(), crs=4326)
 gdf
 ```
 
-Put them on a map
+Or, we can drop the GeoJSON directly into an interactive map using `folium`:
 ```{python}
+# | column: page
 import folium
 import geojson_pydantic
 
@@ -110,8 +232,16 @@ m
 
 ```
 
-Shut down the docker network
+## Conclusion
+Hopefully this is enough to get you up and running with a REST API for your own
+PostGIS database!
+I highly recommend paging through the PostGREST documentation, so if you are
+left wondering about the possibilities for a REST API for your database,
+definitely check out the full documentation.
+
 ```{python}
+# | echo: false
+# | output: false
 !docker stop postgrestgis_server_1 postgrestgis_db_1
 ```
 

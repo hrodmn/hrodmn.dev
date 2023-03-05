@@ -24,7 +24,6 @@ services:
       - "${POSTGRESTGIS_PORT}:5432"
     volumes:
       - ./setup_db.sql:/docker-entrypoint-initdb.d/setup_db.sql
-    restart: on-failure
     healthcheck:
       test: "PGPASSWORD=${POSTGRES_PASS} pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
 
