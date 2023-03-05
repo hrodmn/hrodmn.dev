@@ -1,39 +1,70 @@
 ---
 title: "PostgREST + PostGIS"
-date: "2/24/2023"
+# date: "2/24/2023"
 freeze: true
-engine: knitr
-cache: false
+cache: true
+filters:
+   - include-code-files
 ---
 
-```{bash}
-POSTGRES_USER=postgrestgis \
+## Introduction
+PostgreSQL databases enabled with the PostGIS extensions are a great way to
+store and manage geospatial data.
+Managing database credentials, however, can be cumbersome!
+If you want to provide easy, public, read-only access to information in any
+PostgreSQL database, it is possible to make a simple REST API using
+[PostgREST](https://postgrest.org/en/stable/).
+The API comes with some powerful table-querying capabilities out of the box but
+you can turn it into a geospatial API with user-defined SQL functions.
+
+In this article I will walk through an example for setting up a PostGIS-enabled
+database and getting PostGREST running with a bounding box query.
+The example database + endpoint runs in a docker network that you can fire up
+locally for yourself, all of the files are availble
+[on GitHub](https://github.com/hrodmn/hrodmn.dev/blob/main/posts/postgrestgis/):
+* [`setup_db.sql`](setup_db.sql): SQL script for setting up the database
+* [`docker-compose.yml`](docker-compose.yml): docker compose file for setting up
+the docker network
+
+## Set up a database
+
+```{.python include="setup_db.sql" start-line=1 end-line=12}
+```
+
+```{.python include="docker-compose.yml"}
+```
+
+Build the docker network using
+[postgrestgis docker-compose.yml](docker-compose.yml)
+
+```{python}
+!POSTGRES_USER=postgrestgis \
   POSTGRES_PASS=password \
   POSTGRES_DB=postgrestgis \
   POSTGRESTGIS_PORT=25432 \
   docker-compose up -d
 
 # pause to make sure the docker network gets up and running
-sleep 15s
+!sleep 15s
 ```
 
 Send some queries using curl:
-```{bash}
+```{python}
 # run a query to get id == 1
-curl "http://localhost:3000/plot?id=eq.1" -H "Accept: application/geo+json" --silent
+!curl "http://localhost:3000/plot?id=eq.1" -H "Accept: application/geo+json" --silent
 ```
 
 Try writing data to the `plot` table. It doesn't work! That's a good thing.
-```{bash}
+```{python}
 # can't write data to plot table (which is good)
-curl http://localhost:3000/plot -X POST -H "Content-Type: application/json" \
+!curl http://localhost:3000/plot -X POST -H "Content-Type: application/json" \
   -d '{"lon": -90.0, "lat": 45.0}' \
    --silent
 ```
 
 To send a query from python:
 ```{python}
-# import geopandas as gpd
+import geopandas as gpd
 import requests
 
 bbox = (-95.9190, 45.7978, -90.6841, 48.1250)
@@ -44,15 +75,55 @@ r = requests.post(
 )
 
 # load into geopandas GeoDataFrame
-# gdf = gpd.GeoDataFrame.from_features(r.json(), crs=4326)
-# gdf
-r.json()
+gdf = gpd.GeoDataFrame.from_features(r.json(), crs=4326)
+gdf
+```
+
+Put them on a map
+```{python}
+import folium
+import geojson_pydantic
+
+center = ((bbox[1] + bbox[3]) / 2, (bbox[0] + bbox[2]) / 2)
+
+m = folium.Map(location=center, tiles="Stamen Toner", zoom_start=7)
+
+# add bounding box to map
+bbox_geojson = folium.GeoJson(
+    data=geojson_pydantic.Feature(
+        geometry=geojson_pydantic.Polygon.from_bounds(*bbox)
+    ).dict(exclude_none=True),
+    style_function=lambda x: {
+        "opacity": 1,
+        "dashArray": "1",
+        "fillOpacity": 0,
+        "weight": 2,
+    },
+)
+bbox_geojson.add_to(m)
+
+# add points to map
+plots_geojson = folium.GeoJson(data=r.json())
+plots_geojson.add_to(m)
+
+m
+
 ```
 
 Shut down the docker network
-```{bash}
-docker stop postgrestgis_server_1 postgrestgis_swagger_1 postgrestgis_db_1
+```{python}
+!docker stop postgrestgis_server_1 postgrestgis_db_1
 ```
+
+
+
+
+
+
+
+
+
+
 
 
 
