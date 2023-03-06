@@ -1,9 +1,12 @@
 black
 camelot-py[cv]
 dask
-geogif
+folium
+geojson_pydantic
+geopandas
 jupyter
 jupyter-cache
+matplotlib
 PyPDF2<3.0.0
 pyproj
 pystac
