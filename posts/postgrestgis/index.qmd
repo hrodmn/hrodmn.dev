@@ -1,26 +1,27 @@
 ---
 title: "PostgREST + PostGIS"
+subtitle: "How to set up a geospatial-capable REST API for your PostGIS database."
 date: "3/5/2023"
-freeze: false
-cache: false
 filters:
    - include-code-files
+image: "postgrest.webp"
+
 ---
 
 ## Introduction
 PostgreSQL databases enabled with the PostGIS extensions are a great way to
 store and manage geospatial data.
-Managing database credentials, however, can be cumbersome!
-If you want to provide easy, public, read-only access to information in any
-PostgreSQL database, it is possible to make a simple REST API using
-[PostgREST](https://postgrest.org/en/stable/).
+Managing database credentials for many users, however, can be cumbersome!
+If you want to provide easy, public (or authenticated), read-only access to
+information in any PostgreSQL database, it is possible to make a simple REST API
+using [PostgREST](https://postgrest.org/en/stable/).
 The API comes with some powerful table-querying capabilities out of the box but
 you can turn it into a geospatial API with user-defined SQL functions.
 
 In this article I will walk through an example for setting up a PostGIS-enabled
-database and getting PostGREST running with a bounding box query.
+database and getting PostgREST running with a bounding box query endpoint.
 This process is basically identical to the one described in the
-[first PostGREST tutorial](https://postgrest.org/en/stable/tutorials/tut0.html#step-4-create-database-for-api)
+[first PostgREST tutorial](https://postgrest.org/en/stable/tutorials/tut0.html#step-4-create-database-for-api)
 but with a side of PostGIS sizzle.
 The example database + endpoint runs in a docker network that you can fire up
 locally for yourself.
@@ -37,12 +38,12 @@ gets run every time we fire up the docker network
 the docker network
 
 ## Set up a database
-To demonstrate the geospatial query possibilities of PostGREST, we to set up a
-PostGIS-enabled database.
+To demonstrate the geospatial query possibilities of PostgREST, we need to set
+up a PostGIS-enabled database.
 This process is defined in `setup_db.sql` which gets run every time we launch
 the docker network.
 For a real application, you probably would not want to initiate the database
-from scratch everytime but it is convenient for this example.
+from scratch every time but it is convenient for this example.
 
 ### add records to the `plot` table
 First, we create a single table called `plot` that has an ID column (`id`),
@@ -62,20 +63,20 @@ the PostGIS functions `st_setsrid` and `st_makepoint`:
 ### set up credentials for API
 The PostgREST API will access the database using a pre-defined user credential.
 The details for what you need for your specific use-case may vary, but this
-method (pulled straight out of the PostGREST docs) will generate a read-only
-user account that has `select` privelges for the `plot` table.
+method (pulled straight out of the PostgREST docs) will generate a read-only
+user account that has `select` privileges for the `plot` table.
 
 ```{.sql include="setup_db.sql" start-line=23 end-line=28}
 ```
 
 ### define `query_bbox` function
-PostGREST opens up a powerful querying API out-of-the-box, but if you want to
-use any of the PostGIS functions you need to create use user-defined functions.
+PostgREST contains a powerful querying API out-of-the-box, but if you want to
+use any of the spatial operations from the PostGIS functions you need to create
+user-defined functions that use them.
+
 The function `query_bbox` takes a set of bounding box coordinates (`xmin`,
 `ymin`, `xmax`, `ymax`) and returns all of the `plot` records that fall within
-the bounding box.
-When you send a request to this endpoint, the records (`setof api.plot`) will be
-returned as JSON:
+the bounding box:
 
 ```{.sql include="setup_db.sql" start-line=29 end-line=43}
 ```
@@ -116,9 +117,9 @@ up in `setup_db.sql` for the API connection (`authenticator:mysecretpassword`)
   is convenient in this case because the containerized database is already
   configured for access by other services within the docker network.
 
-* `PGRST_DB_SCHEMAS`: name(s) of schemas that PostGREST can use
+* `PGRST_DB_SCHEMAS`: name(s) of schemas that PostgREST can use
 
-* `PGRST_DB_ANON_ROLE`: database role to be used by PostGREST, needs to match
+* `PGRST_DB_ANON_ROLE`: database role to be used by PostgREST, needs to match
 the one that we defined in `setup_db.sql`
 
 * `PGRST_OPENAPI_SERVER_PROXY_URI`: URI for the database endpoint, set to use
@@ -145,8 +146,8 @@ Now that the database and PostgREST server are running we can send queries to
 the database.
 
 ### query using `curl`
-The [PostGREST API docs](https://postgrest.org/en/stable/api.html) has an
-extensive guide to interacting with the API, so definitely check that out.
+The [PostgREST API documentation](https://postgrest.org/en/stable/api.html) has 
+an extensive guide to interacting with the API, so definitely check that out.
 
 This query will pull the first 10 records from the `plot` table:
 ```{python}
@@ -172,9 +173,11 @@ It doesn't work!
 That's a good thing.
 We could have set up the API's credentials with write privileges but we did not,
 so this is exactly what we want to see.
+It is possible to configure an endpoint with write privileges but I have not
+tried it yet.
 
 ### query using Python
-We can use the `requests` library to send queries to PostgREST, too.
+We can use the `requests` library to send queries to PostgREST.
 This query uses the `query_bbox` function that we defined in `setup_db.sql`,
 which is conveniently set up as an endpoint in our API.
 ```{python}
@@ -229,13 +232,12 @@ plots_geojson = folium.GeoJson(data=r.json())
 plots_geojson.add_to(m)
 
 m
-
 ```
 
 ## Conclusion
 Hopefully this is enough to get you up and running with a REST API for your own
 PostGIS database!
-I highly recommend paging through the PostGREST documentation, so if you are
+I highly recommend paging through the PostgREST documentation, so if you are
 left wondering about the possibilities for a REST API for your database,
 definitely check out the full documentation.
 
