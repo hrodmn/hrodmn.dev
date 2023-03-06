@@ -2,3 +2,4 @@ format: html
 author: Henry Rodman
 execute:
   cache: true
+  freeze: false
