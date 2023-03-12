@@ -1,7 +1,7 @@
 ---
-title: "About"
+title: "Henry Rodman"
 about:
-  template: marquee
+  template: solana
   image: profile.jpg
   image-shape: rectangle
   image-width: 20em
@@ -9,125 +9,91 @@ about:
     - icon: github
       text: github
       href: https://github.com/hrodmn
-    - icon: mastodon
-      text: mastodon
-      href: https://mas.to/@hrodmn
-    - icon: twitter
-      text: twitter
-      href: https://twitter.com/hrodmn
     - icon: linkedin
       text: linkedin
       href: https://www.linkedin.com/in/hrodmn
+    - icon: mastodon
+      text: mastodon
+      href: https://mas.to/@hrodmn
     - icon: envelope
       text: email
       href: mailto:henry.rodman@gmail.com
-
+format:
+  html: default
+  PrettyPDF-pdf:
+    output-file: rodman_resume.pdf
+format-links: [PrettyPDF-pdf]
 ---
 
-I am a data engineer at [NCX](https://ncx.com) where I spend my days writing the
-code that runs our natural capital marketplace.
+::: {.content-visible when-format="pdf"}
+
+\location{Duluth, MN} \ | \ \email{henry.rodman@gmail.com} | \ \phone{612-845-7637}
+
+\github{hrodmn} \ | \ \linkedin{hrodmn} \ | \ \mastodon{mas.to/@hrodmn} \ | \website{hrodmn.dev}
+
+:::
+
+::: {.content-visible when-format="html"}
+
+I am a data engineer at [NCX](https://ncx.com) where I write code to run our
+natural capital marketplace.
 My educational background is in forestry and statistics, but I have spent most
 of the last decade honing my programming skills on the job at NCX (née
 SilviaTerra).
-My favorite thing to do at work is to build clean and elegant systems for
-processing geospatial data.
+My programming specialty is building clean and elegant systems for processing
+geospatial data.
 
-I have learned everything I know about programming from open-source developers,
-my coworkers at NCX, my classmates at OSU, and the many helpful and kind
-strangers that post questions/answers/ideas on the internet!
+:::
 
 ## Experience
 
-NCX | Data Engineer | Jan 2021 - present
+**Data Engineer** NCX, Remote | Jan 2021 - present
 
-- Responsibilities
-  - Build and maintain data pipelines for processing geospatial data
-    - languages: Python, R
-    - operating systems: Ubuntu
-    - tools: GDAL, STAC (`stac-fastapi`, `pgstac`), PostgreSQL, `xarray`, `Dask`,
-  `rasterio`, `shapely`, MapReduce, Docker
-    - clouds: AWS and Azure
-    - CI/CD: GitHub Actions
-    - code review: GitHub pull requests
-  - Design pipelines for processing, storing, and organizing raster and vector
-    data
-    - reprojection
-    - geometry operations
-    - cloud-optimized formats
-    - visualization
-  - Work with data scientists to deploy machine learning and Bayesian statistical
-    models
-    - R packages: `brms`, `tidyverse`, `furrr`, `future`
-    - Python packages: `fastai`, `tsai`, `xgboost`, `cmdstanpy`
-  - Work with platform team to distribute data products to NCX's Landowner
-    Platform
-    - collaborate with platform engineers to define and maintain API endpoints for
-      the data processing pipeline
-  - Build systems up from POC to production
-    - discover existing data that can help solve a business problem 
-    - develop minimal methods for distilling raw data into useful information
-    - rapidly iterate until reaching a workable solution for the problem at hand
-- Project highlights:
-  - NCX internal STAC
-    - designed a python API that uses `pypgstac` and `rio_stac` to generate STAC
-    metadata for raster data products that we created in-house, 
-    - implemented unit testing framework using `pytest-postgresql`
-    - this work enabled rapid iteration on modeling efforts by data scientists 
-  - MapReduce + Python + R pipeline for generating forest carbon assessments for
-  landowner property boundaries
-    - built process to handle messy user-submitted property boundary geometries
-    with minimal data loss
-    - built a system capable of making pixel-wise computations for thousands of
-    properties concurrently
-    - reduced predictions down a one-line data summary to populate the
-    landowner-facing report
-  - Forest vegetation modeling imagery processing pipeline
-    - Assembled cloud-free imagery for the continental US
-      - Landsat 8, Sentinel 2
-      - apply BRDF correction
-      - create mosaics for modeling at the ecoregion scale
-    - Built prediction API for generating estimates of forest vegetation
-    structure for any AOI
+* Designed multiple pipelines for processing, storing, and organizing geospatial
+  data
+  * model training- and prediction pipeline for using public satellite imagery  
+    datasets and ground measurements to predict forest vegetation structure for
+    the contiguous US
+  * forest carbon assessment pipeline for properties ranging from tens to     
+    millions of acres
+  * NCX's SpatioTemporal Asset Catalog (STAC)
+* Deployed machine learning and Bayesian statistical models in production
+* Distributed data products to the NCX Platform Team for consumption on NCX's 
+  Landowner Platform
 
----
+**Forest Biometrician** SilviaTerra, Remote | June 2016 - Dec 2020
 
-SilviaTerra | Forest Biometrician | June 2016 - Dec 2020
-
-- Responsibilities
-  - Design processes for generating forest inventory using remote sensing data
+- Developed processes for generating forest inventory data using ground
+  measurements paired with remote sensing data
   paired with on-the-ground measurements
-    - train statistical models to predict forest structure as a function of
-      remotely-sensed information and demographic information about the forest
-    - build and maintain the infrastructure for summarizing the model
-      predictions into a deliverable format
-  - Work with clients (industrial forest management companies) to understand
-  their needs for forest inventory and how to provide the most useful data
-  product for their operations
+- Operated the cloud computing platform to generate forest inventory estimates
+  for millions of acres
+- Worked with industrial forest management companies to understand their needs 
+  for forest inventory and how to provide the most useful data product for their
+  operations
 
-- Project highlights
-  - Designed a parameterized system for computing sample statistics for forest
-  inventory data
-    - flexible estimation of many forest vegetation structure parameters at
-    various scales (e.g. stratum-level density of oak basal area, stand-level
-    density of all tree species)
-  - Maintained and improved a pipeline for pairing field measurement plots with
-  remote sensing data for local models of forest vegetation structure
-  - Learned cloud compute infrastructure by close collaboration with more
-  experienced software engineers
+## Skills
+- **programming languages**: Python, R
+- **operating systems**: Ubuntu
+- **operational tools**: dask.distributed, Hadoop + MapReduce, Docker
+- **geospatial tools**: 
+  * GDAL, STAC, PostGIS
+  * Python packages: pystac, stac-fastapi, pgstac, xarray, dask, rasterio 
+    shapely, pandas, geopandas, pytest
+  * R packages: sf, stars, brms, dplyr, tidyr, purrr, furrr
+- **cloud environments**: AWS and Azure
+- **CI/CD**: GitHub Actions
+- **code review**: GitHub pull requests
 
 
 ## Education
 
-Oregon State University | Corvallis, OR
+**M.S. in Sustainable Forest Management**
+Oregon State University, Corvallis, OR. **2016**
 
-M.S. in Sustainable Forest Management | Sep 2014 - June 2016
+Thesis: [Forest Soils and Topography : Decoding the Influence of Physical Site Characteristics on Soil Water and Forest Productivity in Oregon's Coast Ranges](https://ir.library.oregonstate.edu/concern/graduate_thesis_or_dissertations/p2677094w)
 
----
-
-University of Minnesota | St. Paul, MN
-
-B.S. in Forest Resources | Sep 2011 - May 2014
-
-
+**B.S. in Forest Resources**
+University of Minnesota, St. Paul, MN. **2014**
 
 
