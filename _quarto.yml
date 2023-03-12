@@ -2,14 +2,15 @@ project:
   type: website
 
 website:
-  title: "Henry Rodman"
+  title: "hrodmn.dev"
   site-url: https://hrodmn.dev
   repo-url: https://github.com/hrodmn/hrodmn.dev
   repo-actions: [source]
   google-analytics: "G-3F77E5H78E"
   navbar:
     right:
-      - about.qmd
+      - text: about
+        href: about.qmd
       - icon: github
         href: https://github.com/hrodmn/
       - icon: rss
