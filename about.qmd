@@ -4,7 +4,7 @@ about:
   template: solana
   image: profile.jpg
   image-shape: rectangle
-  image-width: 20em
+  image-width: 13em
   links:
     - icon: github
       text: github
@@ -18,18 +18,21 @@ about:
     - icon: envelope
       text: email
       href: mailto:henry.rodman@gmail.com
+    - icon: file-person
+      text: résumé
+      href: rodman_resume.pdf
 format:
   html: default
   PrettyPDF-pdf:
     output-file: rodman_resume.pdf
-format-links: [PrettyPDF-pdf]
+format-links: false
 ---
 
 ::: {.content-visible when-format="pdf"}
 
-\location{Duluth, MN} \ | \ \email{henry.rodman@gmail.com} | \ \phone{612-845-7637}
+\website{www.hrodmn.dev} \ | \ \email{henry.rodman@gmail.com} \ | \ \phone{612-845-7637} \ | \ \location{Duluth, MN}
 
-\github{hrodmn} \ | \ \linkedin{hrodmn} \ | \ \mastodon{mas.to/@hrodmn} \ | \website{hrodmn.dev}
+\github{hrodmn} \ | \ \linkedin{hrodmn} \ | \ \mastodon{mas.to/@hrodmn} \ | \twitter{hrodmn}
 
 :::
 
@@ -38,7 +41,7 @@ format-links: [PrettyPDF-pdf]
 I am a data engineer at [NCX](https://ncx.com) where I write code to run our
 natural capital marketplace.
 My educational background is in forestry and statistics, but I have spent most
-of the last decade honing my programming skills on the job at NCX (née
+of the last decade honing my programming skills on the job at NCX (formerly
 SilviaTerra).
 My programming specialty is building clean and elegant systems for processing
 geospatial data.
@@ -47,35 +50,34 @@ geospatial data.
 
 ## Experience
 
-**Data Engineer** NCX, Remote | Jan 2021 - present
+**Data Engineer** NCX, Remote | January 2021 - present
 
-* Designed multiple pipelines for processing, storing, and organizing geospatial
-  data
-  * model training- and prediction pipeline for using public satellite imagery  
-    datasets and ground measurements to predict forest vegetation structure for
-    the contiguous US
-  * forest carbon assessment pipeline for properties ranging from tens to     
-    millions of acres
+* Built and maintained multiple pipelines for processing and organizing
+  geospatial data:
+  * model training- and prediction pipeline for combining public satellite  
+    imagery datasets and ground measurements to predict forest vegetation
+    structure for the contiguous US
+  * forest carbon assessment pipeline capable of concurrently processing
+    thousands of user-submitted property boundaries
   * NCX's SpatioTemporal Asset Catalog (STAC)
 * Deployed machine learning and Bayesian statistical models in production
 * Distributed data products to the NCX Platform Team for consumption on NCX's 
   Landowner Platform
 
-**Forest Biometrician** SilviaTerra, Remote | June 2016 - Dec 2020
+**Forest Biometrician** SilviaTerra, Remote | June 2016 - December 2020
 
 - Developed processes for generating forest inventory data using ground
   measurements paired with remote sensing data
-  paired with on-the-ground measurements
 - Operated the cloud computing platform to generate forest inventory estimates
   for millions of acres
-- Worked with industrial forest management companies to understand their needs 
-  for forest inventory and how to provide the most useful data product for their
-  operations
+- Communicated with industrial forest management companies to understand their 
+  forest inventory data needs
 
 ## Skills
 - **programming languages**: Python, R
 - **operating systems**: Ubuntu
-- **operational tools**: dask.distributed, Hadoop + MapReduce, Docker
+- **operational tools**: git, Docker, dask.distributed, Hadoop + MapReduce (AWS
+    EMR, Azure HDInsight)
 - **geospatial tools**: 
   * GDAL, STAC, PostGIS
   * Python packages: pystac, stac-fastapi, pgstac, xarray, dask, rasterio 
@@ -84,16 +86,19 @@ geospatial data.
 - **cloud environments**: AWS and Azure
 - **CI/CD**: GitHub Actions
 - **code review**: GitHub pull requests
+- **project management**: Asana
 
 
 ## Education
 
-**M.S. in Sustainable Forest Management**
-Oregon State University, Corvallis, OR. **2016**
+**MS Sustainable Forest Management**
+
+Oregon State University, Corvallis, OR | 2016
 
 Thesis: [Forest Soils and Topography : Decoding the Influence of Physical Site Characteristics on Soil Water and Forest Productivity in Oregon's Coast Ranges](https://ir.library.oregonstate.edu/concern/graduate_thesis_or_dissertations/p2677094w)
 
-**B.S. in Forest Resources**
-University of Minnesota, St. Paul, MN. **2014**
+**BS Forest Resources**
+
+University of Minnesota, St. Paul, MN | 2014
 
 

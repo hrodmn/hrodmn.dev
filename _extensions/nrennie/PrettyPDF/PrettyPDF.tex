@@ -47,7 +47,7 @@
 \subsectionfont{\color{dark}\fontsize{14}{16.8}\selectfont}
 \titleformat{\subsection}
   {\sffamily\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.8pt]}]
-  
+
 % left align title
 \makeatletter
 \renewcommand{\maketitle}{\bgroup\setlength{\parindent}{0pt}
@@ -60,7 +60,7 @@
 % social media functions
 \makeatletter
 \newcommand{\github}[1]{%
-   \href{https://github.com/#1}{\faGithubSquare \ #1}%
+   \href{https://github.com/#1}{\faGithub \ #1}%
 }
 \makeatother
 
@@ -73,6 +73,12 @@
 \makeatletter
 \newcommand{\mastodon}[1]{%
    \href{https://#1}{\faMastodon \ #1}%
+}
+\makeatother
+
+\makeatletter
+\newcommand{\twitter}[1]{%
+   \href{https://twitter.com/#1}{\faTwitter \ #1}%
 }
 \makeatother
 
@@ -97,9 +103,12 @@
 
 \makeatletter
 \newcommand{\website}[1]{%
-   \href{https://#1}{\faHouseUser \ #1}%
+   \href{https://#1}{\faChrome \ #1}%
 }
 \makeatother
+
+% Set justification
+\raggedright
 
 %% Use some custom fonts
 \setsansfont{Ubuntu}[
