@@ -10,6 +10,7 @@ is an awesome public source for 30 meter spectral satellite imagery.
 Produced by NASA, it combines the independently powerful Landsat 8/9
 and Sentinel 2 satellite observation systems into one analysis-ready dataset.
 Some of the best features include:
+
 * More rich time series than either Sentinel 2 or Landsat individually
 
   * one observation every two to three days from HLS compared to one every five
