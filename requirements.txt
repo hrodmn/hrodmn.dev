@@ -39,6 +39,7 @@ fqdn==1.5.1
 fsspec==2023.3.0
 geojson-pydantic==0.5.0
 geopandas==0.12.2
+ghostscript==0.7
 greenlet==2.0.2
 idna==3.4
 importlib-metadata==6.0.0
