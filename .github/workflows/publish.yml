@@ -31,7 +31,7 @@ jobs:
         timeout-minutes: 12
 
       - name: Install system dependencies
-        run: sudo apt update && sudo apt install ghostscript
+        run: sudo apt update && sudo apt install ghostscript python3-tk
 
       - name: Install Python packages
         run: pip install -r requirements.txt
