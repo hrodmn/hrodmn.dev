@@ -1,6 +1,7 @@
 ---
 title: "HLS: Your new favorite remote sensing dataset"
 date: "2/24/2023"
+date-modified: "3/17/2023"
 image: "hls.png"
 ---
 
@@ -40,6 +41,32 @@ Check out the
 for more details on the process for generating the HLS data.
 
 ## Get organized
+
+### authentication with Earthdata and the .netrc file
+To access the HLS data from NASA, you will need to have a (free) Earthdata Login
+profile.
+You can create an account [here](https://urs.earthdata.nasa.gov/).
+Once your account is active, you will need to add your login credentials to a
+`.netrc` file in your home directory.
+You can do this with a single shell command in a Unix system:
+```sh
+echo "machine urs.earthdata.nasa.gov login <USERNAME> password <PASSWORD>" > ~/.netrc
+```
+When GDAL reads the raster data using `curl` it will find your credentials in
+this file.
+
+### environment variables
+There are a handful of environment variables that must be set in order for GDAL
+to locate and read the raster files correctly.
+You can choose to include these in a startup script (e.g. `~/.bashrc`) or set
+them within your Python script:
+
+```sh
+CPL_VSIL_CURL_USE_HEAD=FALSE
+GDAL_DISABLE_READDIR_ON_OPEN=YES
+GDAL_HTTP_COOKIEJAR=/tmp/cookies.txt
+GDAL_HTTP_COOKIEFILE=/tmp/cookies.txt
+```
 
 ### imports
 Here are the python packages that we need:
