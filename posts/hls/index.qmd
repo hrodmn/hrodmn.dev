@@ -189,6 +189,7 @@ Without any modifications, some of the bands would get scrambled when combining
 data from the two collections.
 
 ```{python}
+# | echo: false
 import camelot
 
 tables = camelot.read_pdf(
@@ -264,6 +265,8 @@ There are ways to do this after you load the data using
 for item in stac_items:
     for original_band, new_band in BAND_CROSSWALK.get(item.collection_id).items():
         item.assets[new_band] = item.assets.pop(original_band)
+
+
 ```
 
 ### cloud/shadow masking
@@ -279,7 +282,6 @@ Here is a function that we can use to get all of the integer values that meet
 several quality criteria:
 ```{python}
 def get_valid_fmask_ints(valid_conditions: dict):
-
     # enumerate all possible eight digit binary values
     all_binary_values = list(itertools.product([0, 1], repeat=8))
 
@@ -378,6 +380,7 @@ items_by_collection = {
 
 stacks_by_collection = {}
 
+
 # a function to flatten the time dimension
 def flatten(x, dim="time"):
     assert isinstance(x, xr.DataArray)
@@ -415,6 +418,8 @@ Since we are going to make several plots using this array, load the data into
 memory with a call to the `.compute()` method.
 ```{python}
 sensor_stack = sensor_stack.compute()
+
+
 ```
 
 The HLS data are organized by 100 km MGRS tiles, and there can be redundant 
