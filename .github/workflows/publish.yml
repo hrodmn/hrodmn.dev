@@ -17,7 +17,6 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
-          version: pre-release
           tinytex: true
 
       - name: Set up Python
@@ -50,6 +49,7 @@ jobs:
       - name: Render
         env:
           CPL_VSIL_CURL_USE_HEAD: FALSE
+          CPL_CURL_VERBOSE: TRUE
           GDAL_DISABLE_READDIR_ON_OPEN: YES
           GDAL_HTTP_COOKIEJAR: /tmp/cookies.txt
           GDAL_HTTP_COOKIEFILE: /tmp/cookies.txt
