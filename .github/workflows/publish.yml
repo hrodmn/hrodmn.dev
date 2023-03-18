@@ -49,7 +49,6 @@ jobs:
       - name: Render
         env:
           CPL_VSIL_CURL_USE_HEAD: FALSE
-          CPL_CURL_VERBOSE: YES
           GDAL_DISABLE_READDIR_ON_OPEN: YES
           GDAL_HTTP_COOKIEJAR: /tmp/cookies.txt
           GDAL_HTTP_COOKIEFILE: /tmp/cookies.txt
