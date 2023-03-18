@@ -343,6 +343,7 @@ hls_cloud_free = (
     hls_stack_raw.where(hls_stack_raw.sel(band="Fmask").isin(valid_fmask_ints))
     .resample(time="1M")
     .median(skipna=True)
+    .compute()
 )
 ```
 
@@ -548,10 +549,114 @@ sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
 ```
 
 
+## Compare to original Landsat and Sentinel 2
+
+```{python original_sentinel}
+sentinel_catalog = pystac_client.Client.open(
+    "https://earth-search.aws.element84.com/v0"
+)
+sentinel_stac_items = sentinel_catalog.search(
+    collections=["sentinel-s2-l2a-cogs"],
+    bbox=bbox_4326,
+    datetime=[START_DATE, END_DATE],
+).get_all_items()
+
+sentinel_band_crosswalk = {
+    "B04": "red",
+    "B03": "green",
+    "B02": "blue",
+}
+
+for item in sentinel_stac_items:
+    for original_band, new_band in sentinel_band_crosswalk.items():
+        item.assets[new_band] = item.assets.pop(original_band)
 
 
+sentinel_stack = stackstac.stack(
+    items=sentinel_stac_items,
+    assets=["red", "green", "blue", "SCL"],
+    epsg=EPSG,
+    resolution=30,
+    bounds=AOI.bounds,
+    xy_coords="center",
+)
+
+# valid SCL values: 4: vegetation, 5: bare soils, 6: water, 11: snow or ice
+# https://docs.digitalearthafrica.org/en/latest/data_specs/Sentinel-2_Level-2A_specs.html
+valid_scl = [4, 5, 6, 11]
+
+sentinel_cloud_free = (
+    sentinel_stack.where(sentinel_stack.sel(band="SCL").isin(valid_scl))
+    .sel(band=["red", "green", "blue"])
+    .resample(time="1M")
+    .median(skipna=True)
+    .compute()
+)
+
+sentinel_cloud_free.squeeze(dim="time").sel(band=["red", "green", "blue"]).plot.imshow(
+    rgb="band",
+    robust=True,
+    size=7,
+    # vmin=0,
+    # vmax=15000,
+    add_labels=False,
+)
+```
+
+```{python original_landsat}
+import planetary_computer
+
+landsat_catalog = pystac_client.Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+landsat_stac_items = landsat_catalog.search(
+    collections=["landsat-c2-l2"],
+    bbox=bbox_4326,
+    datetime=[START_DATE, END_DATE],
+).get_all_items()
+
+landsat_stack = stackstac.stack(
+    items=landsat_stac_items,
+    assets=["red", "green", "blue", "qa_pixel"],
+    epsg=EPSG,
+    resolution=30,
+    bounds=AOI.bounds,
+    xy_coords="center",
+)
+
+# Make a bitmask---when we bitwise-and it with the data, it leaves just the 4 bits we care about
+mask_bitfields = [1, 2, 3, 4]  # dilated cloud, cirrus, cloud, cloud shadow
+bitmask = 0
+for field in mask_bitfields:
+    bitmask |= 1 << field
+
+landsat_qa = landsat_stack.sel(band="qa_pixel").astype("uint16")
+landsat_bad = landsat_qa & bitmask  # just look at those 4 bits
+
+landsat_good = landsat_stack.where(
+    landsat_bad == 0
+)  # mask pixels where any one of those bits are set
+
+landsat_cloud_free = (
+    landsat_good.sel(band=["red", "green", "blue"])
+    .resample(time="1M")
+    .median(skipna=True)
+    .compute()
+)
+landsat_cloud_free
+
+landsat_cloud_free.squeeze(dim="time").sel(band=["red", "green", "blue"]).plot.imshow(
+    rgb="band",
+    robust=True,
+    size=7,
+    # vmin=0,
+    # vmax=15000,
+    add_labels=False,
+)
 
 
+```
 
 
 
