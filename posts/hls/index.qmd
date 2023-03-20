@@ -1,15 +1,25 @@
 ---
 title: "HLS: Your new favorite remote sensing dataset"
 date: "2/24/2023"
-date-modified: "3/17/2023"
+date-modified: "3/20/2023"
 image: "hls.png"
+fig-cap-location: top
 ---
 
 The [Harmonized Landsat Sentinel 2 (HLS) dataset](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/)
 is an awesome public source for 30 meter spectral satellite imagery.
 
+::: {.column-page layout="[[1, 1], [-0.25, 0.5, -0.25]]"}
+![Sentinel 2 L2A](index_files/figure-html/fig-mosaic-comparison-output-1.png)
+
+![Landsat Collection 2 Level-2](index_files/figure-html/fig-mosaic-comparison-output-2.png)
+
+![Harmonized Landsat Sentinel 2](index_files/figure-html/fig-mosaic-comparison-output-3.png)
+:::
+
 Produced by NASA, it combines the independently powerful Landsat 8/9
 and Sentinel 2 satellite observation systems into one analysis-ready dataset.
+
 Some of the best features include:
 
 * More rich time series than either Sentinel 2 or Landsat individually
@@ -81,6 +91,7 @@ import pystac
 import pystac_client
 import stackstac
 import xarray as xr
+from rasterio.enums import Resampling
 from shapely.geometry import box
 from shapely.ops import transform
 
@@ -160,7 +171,10 @@ for item in all_items:
     entry = collection_history[item.collection_id][year_month]
     if (date := item.datetime.date()) not in entry:
         entry.append(date)
+```
 
+```{python}
+# | code-fold: true
 # get count of images by year/month/sensor
 collection_counts = pd.DataFrame(
     {
@@ -171,7 +185,9 @@ collection_counts = pd.DataFrame(
     }
 ).fillna(0)
 
-collection_counts.plot.line(title="monthly count of days with observations by sensor")
+_ = collection_counts.plot.line(
+    title="monthly count of days with observations by sensor"
+)
 ```
 You can see that the Landsat time series stretches back to Landsat 8's launch in
 2013 and that the Sentinel 2 observations kick into gear in late 2020.
@@ -189,7 +205,7 @@ Without any modifications, some of the bands would get scrambled when combining
 data from the two collections.
 
 ```{python}
-# | echo: false
+# | code-fold: true
 import camelot
 
 tables = camelot.read_pdf(
@@ -343,6 +359,7 @@ hls_cloud_free = (
     hls_stack_raw.where(hls_stack_raw.sel(band="Fmask").isin(valid_fmask_ints))
     .resample(time="1M")
     .median(skipna=True)
+    .compute()
 )
 ```
 
@@ -350,18 +367,164 @@ Plot the image and bask in the cloud-free beauty:
 ```{python}
 # | warning: false
 # | message: false
+# | code-fold: true
 # | column: page
-hls_cloud_free.squeeze(dim="time").sel(band=["red", "green", "blue"]).plot.imshow(
-    rgb="band",
-    robust=True,
-    size=7,
-    vmin=0,
-    vmax=1000,
-    add_labels=False,
+# | fig-align: center
+# | layout: "[-0.1, 0.8, -0.1]"
+_ = (
+    hls_cloud_free.squeeze(dim="time")
+    .sel(band=["red", "green", "blue"])
+    .plot.imshow(
+        rgb="band",
+        robust=True,
+        size=6,
+        add_labels=False,
+        xticks=[],
+        yticks=[],
+    )
 )
 
 ```
 
+## Compare to Sentinel 2 L2A and Landsat Collection 2 Level-2
+
+```{python original_sentinel}
+# | code-fold: true
+# | warning: false
+# | message: false
+import planetary_computer
+
+element84_catalog = pystac_client.Client.open(
+    "https://earth-search.aws.element84.com/v0"
+)
+sentinel_stac_items = element84_catalog.search(
+    collections=["sentinel-s2-l2a-cogs"],
+    bbox=bbox_4326,
+    datetime=[START_DATE, END_DATE],
+).get_all_items()
+
+sentinel_band_crosswalk = {
+    "B04": "red",
+    "B03": "green",
+    "B02": "blue",
+}
+
+for item in sentinel_stac_items:
+    for original_band, new_band in sentinel_band_crosswalk.items():
+        item.assets[new_band] = item.assets.pop(original_band)
+
+
+sentinel_stack = stackstac.stack(
+    items=sentinel_stac_items,
+    assets=["red", "green", "blue", "SCL"],
+    epsg=EPSG,
+    resolution=30,
+    bounds=AOI.bounds,
+    xy_coords="center",
+    resampling=Resampling.bilinear,
+)
+
+# valid SCL values: 4: vegetation, 5: bare soils, 6: water, 11: snow or ice
+# https://docs.digitalearthafrica.org/en/latest/data_specs/Sentinel-2_Level-2A_specs.html
+valid_scl = [4, 5, 6, 11]
+
+sentinel_cloud_free = (
+    sentinel_stack.where(sentinel_stack.sel(band="SCL").isin(valid_scl))
+    .sel(band=["red", "green", "blue"])
+    .resample(time="1M")
+    .median(skipna=True)
+    .compute()
+)
+
+planetary_computer_catalog = pystac_client.Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+landsat_stac_items = planetary_computer_catalog.search(
+    collections=["landsat-c2-l2"],
+    bbox=bbox_4326,
+    datetime=[START_DATE, END_DATE],
+).get_all_items()
+
+landsat_stack = stackstac.stack(
+    items=landsat_stac_items,
+    assets=["red", "green", "blue", "qa_pixel"],
+    epsg=EPSG,
+    resolution=30,
+    bounds=AOI.bounds,
+    xy_coords="center",
+)
+
+# following https://stackstac.readthedocs.io/en/latest/examples/gif.html#Mask-cloudy-pixels-using-the-QA-band:
+# Make a bitmask---when we bitwise-and it with the data, it leaves just the 4 bits we care about
+mask_bitfields = [1, 2, 3, 4]  # dilated cloud, cirrus, cloud, cloud shadow
+bitmask = 0
+for field in mask_bitfields:
+    bitmask |= 1 << field
+
+landsat_qa = landsat_stack.sel(band="qa_pixel").astype("uint16")
+landsat_bad = landsat_qa & bitmask  # just look at those 4 bits
+
+landsat_good = landsat_stack.where(
+    landsat_bad == 0
+)  # mask pixels where any one of those bits are set
+
+landsat_cloud_free = (
+    landsat_good.sel(band=["red", "green", "blue"])
+    .resample(time="1M")
+    .median(skipna=True)
+    .compute()
+)
+
+```
+
+Both of the original datasets are atmospherially corrected and represent surface
+surface reflectance, but the processed images are definitely not free of cloud
+artifacts!
+One of the greatest advantages of using the HLS dataset instead of the original
+sources is improved cloud masking.
+The HLS data undergo an entirely different process than the Landsat Collection
+Level-2 and Sentinel 2 Level 2A datasets, see below for an outline of the
+processing workflow.
+
+![](https://www.earthdata.nasa.gov/s3fs-public/styles/medium_half_480px_/public/imported/HLS_Infographic_rev.jpg?VersionId=tUoXm2ru6N6AI4DEr0Wi7a2j5jnqs07k&itok=khHqtvQ7)
+
+These images show 30 meter resolution, cloud-free mosaics for July 2022 from
+each source:
+
+```{python}
+# | echo: false
+# | message: false
+# | warning: false
+# | label: fig-mosaic-comparison
+# | column: page
+# | layout: [[1, 1], [-0.25, 0.5, -0.25]]
+# | fig-cap:
+# |   - "Sentinel 2"
+# |   - "Landsat 8/9"
+# |   - "Harmonized"
+
+for stack in [sentinel_cloud_free, landsat_cloud_free, hls_cloud_free]:
+    _ = (
+        stack.squeeze(dim="time")
+        .sel(band=["red", "green", "blue"])
+        .plot.imshow(
+            rgb="band",
+            robust=True,
+            size=5,
+            add_labels=False,
+            xticks=[],
+            yticks=[],
+        )
+    )
+
+```
+
+In the Sentinel 2 image you can clearly see some cloud haze scattered around
+most of the image.
+The Landsat image shows some stripy artifacts that are probably attributable to
+hazy clouds that were not masked from the original images.
+Meanwhile, the HLS mosaic comes out crystal clear!
 
 ## Analyze the Landsat and Sentinel collections separately
 To illustrate the power of the full HLS dataset and the advantage of the
@@ -371,6 +534,7 @@ sensor separately and create a cloud-free mosaic for July 2022 for each one.
 ### get an array for each sensor
 
 ```{python}
+
 items_by_collection = {
     collection: pystac.ItemCollection(
         [item for item in stac_items if item.collection_id == collection]
@@ -448,28 +612,36 @@ flattened_by_day = xr.concat(
 Now when we plot the images we only have one observation per day per sensor.
 ```{python}
 # | column: page
-flattened_by_day.sel(band=["red", "green", "blue"]).plot.imshow(
+# | warning: false
+# | message: false
+_ = flattened_by_day.sel(band=["red", "green", "blue"]).plot.imshow(
     col="sensor",
     row="time",
     rgb="band",
     robust=True,
     size=5,
     vmin=0,
-    vmax=1000,
+    vmax=800,
     add_labels=False,
+    xticks=[],
+    yticks=[],
 )
 ```
 
 Now let's look at the raw `Fmask` values for all of the images.
 ```{python}
 # | column: page
+# | warning: false
+# | message: false
 fmask = flattened_by_day.sel(band=["Fmask"]).squeeze(dim="band")
-fmask.sel(sensor=["Landsat", "Sentinel"]).plot.imshow(
+_ = fmask.sel(sensor=["Landsat", "Sentinel"]).plot.imshow(
     col="sensor",
     row="time",
     cmap="tab20",
     size=4,
     add_labels=False,
+    xticks=[],
+    yticks=[],
 )
 ```
 
@@ -479,12 +651,16 @@ peach categories represent non-cloudy land and water respectively.
 
 Check out the valid/invalid binary values for each sensor/date:
 ```{python}
+# | warning: false
+# | message: false
 # | column: page
-fmask.isin(valid_fmask_ints).plot.imshow(
+_ = fmask.isin(valid_fmask_ints).plot.imshow(
     col="sensor",
     row="time",
     size=4,
     add_labels=False,
+    xticks=[],
+    yticks=[],
 )
 ```
 
@@ -507,14 +683,18 @@ full_stack = xr.concat([sensor_stack, combined_stack], dim="sensor")
 
 Would we have at least one valid observation for every pixel?
 ```{python}
+# | warning: false
+# | message: false
 # | column: page
 has_valid = full_stack.sel(band="Fmask").isin(valid_fmask_ints).any(dim="time")
-has_valid.plot.imshow(
+_ = has_valid.plot.imshow(
     col="sensor",
     size=4,
     add_labels=False,
     vmin=0,
     vmax=1,
+    xticks=[],
+    yticks=[],
 )
 ```
 Not if we only use Landsat images, not if we use only Sentinel images, but we
@@ -530,47 +710,29 @@ observations from hundreds down to only three!
 
 Get cloud-free mosaic for each sensor and the combined set side-by-side.
 ```{python}
+# | warning: false
+# | message: false
 # | column: page
+# | layout: "[-0.1, 0.8, -0.1]"
 sensor_cloud_free = full_stack.where(
     full_stack.sel(band="Fmask").isin(valid_fmask_ints)
 ).median(dim="time", skipna=True)
 
-sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
+_ = sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
     col="sensor",
     rgb="band",
     robust=True,
     size=4,
     vmin=0,
-    vmax=1000,
+    vmax=800,
     add_labels=False,
+    xticks=[],
+    yticks=[],
 )
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+If you look closely, you can see some cloud artifacts in each of the Landsat-
+and Sentinel-only panels, but the mosaic derived from both data sources looks
+totally cloud-free.
+That is why you are going to love HLS.
