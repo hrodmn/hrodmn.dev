@@ -6,6 +6,9 @@ image: "hls.png"
 fig-cap-location: top
 ---
 
+The [Harmonized Landsat Sentinel 2 (HLS) dataset](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/)
+is an awesome public source for 30 meter spectral satellite imagery.
+
 ::: {.column-page layout="[[1, 1], [-0.25, 0.5, -0.25]]"}
 ![Sentinel 2 L2A](index_files/figure-html/fig-mosaic-comparison-output-1.png)
 
@@ -14,12 +17,9 @@ fig-cap-location: top
 ![Harmonized Landsat Sentinel 2](index_files/figure-html/fig-mosaic-comparison-output-3.png)
 :::
 
-
-The [Harmonized Landsat Sentinel 2 (HLS) dataset](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/)
-is an awesome public source for 30 meter spectral satellite imagery.
-
 Produced by NASA, it combines the independently powerful Landsat 8/9
 and Sentinel 2 satellite observation systems into one analysis-ready dataset.
+
 Some of the best features include:
 
 * More rich time series than either Sentinel 2 or Landsat individually
@@ -713,6 +713,7 @@ Get cloud-free mosaic for each sensor and the combined set side-by-side.
 # | warning: false
 # | message: false
 # | column: page
+# | layout: "[-0.1, 0.8, -0.1]"
 sensor_cloud_free = full_stack.where(
     full_stack.sel(band="Fmask").isin(valid_fmask_ints)
 ).median(dim="time", skipna=True)
