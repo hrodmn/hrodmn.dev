@@ -17,8 +17,9 @@ is an awesome public source for 30 meter spectral satellite imagery.
 ![Harmonized Landsat Sentinel 2](index_files/figure-html/fig-mosaic-comparison-output-3.png)
 :::
 
-Produced by NASA, it combines the independently powerful Landsat 8/9
-and Sentinel 2 satellite observation systems into one analysis-ready dataset.
+Produced by NASA, the HLS dataset combines the independently powerful Landsat
+8/9 and Sentinel 2 satellite observation systems into one analysis-ready
+dataset.
 
 Some of the best features include:
 
@@ -34,7 +35,7 @@ which makes mosaics generated across orbits from different days nearly seamless
     * neither of the original data sources for Landsat or Sentinel data have
 this feature
 
-* The data are fairly easily accessible via NASA's
+* The data are accessible via NASA's
 [LPCLOUD STAC](https://cmr.earthdata.nasa.gov/stac/LPCLOUD)!
 
 * Improved cloud masking for Sentinel 2!
@@ -49,6 +50,25 @@ or Sentinel 2!
 Check out the
 [HLS 2.0 User Guide](https://lpdaac.usgs.gov/documents/1326/HLS_User_Guide_V2.pdf)
 for more details on the process for generating the HLS data.
+
+```{python}
+# | echo: false
+# read some tables from the HLS User Guide
+import camelot
+
+tables = camelot.read_pdf(
+    "https://lpdaac.usgs.gov/documents/1326/HLS_User_Guide_V2.pdf", pages="6,17"
+)
+
+
+band_df = tables[0].df
+qa_df = tables[1].df
+
+for df in [band_df, qa_df]:
+    df.columns = df.iloc[0].str.replace("\n", "")
+    df.drop(df.index[0], inplace=True)
+
+```
 
 ## Get organized
 
@@ -147,11 +167,6 @@ bbox_4326 = transform(transformer_4326.transform, AOI).bounds
 ### check out this time series!
 We can query the STAC catalog for the entire time series by searching the
 catalog without a `datetime` specification.
-I am looping through the `pages()` because the NASA STAC connection can be flaky
-sometimes and will give you 502 errors when you loop through a long list of
-`items()`.
-I don't know why the `pages()` method is more stable, but it seems to work
-better for large queries like this.
 ```{python}
 hls_history_search = catalog.search(
     collections=HLS_COLLECTION_IDS,
@@ -173,8 +188,17 @@ for item in all_items:
         entry.append(date)
 ```
 
+:::{.callout-note}
+I am looping through the `pages()` because the NASA STAC connection can be flaky
+sometimes and will give you 502 errors when you loop through a long list of
+`items()`.
+I don't know why the `pages()` method is more stable, but it seems to work
+better for large queries like this.
+:::
+
 ```{python}
 # | code-fold: true
+# | column: page
 # get count of images by year/month/sensor
 collection_counts = pd.DataFrame(
     {
@@ -191,9 +215,14 @@ _ = collection_counts.plot.line(
 ```
 You can see that the Landsat time series stretches back to Landsat 8's launch in
 2013 and that the Sentinel 2 observations kick into gear in late 2020.
-I think the plan is to add the full Sentinel 2 archive to the HLS dataset but
-that is a work in progress.
-Things really got kicked up a notch in 2022 when Landsat 9 came online!
+The density of observations really ramped up in 2022 when Landsat 9 came online!
+
+:::{.callout-note}
+NASA is currently working on adding the full Sentinel 2 archive (back to 2015) 
+to the HLS dataset.
+That project is scheduled to be complete in the Fall of 2023 according to
+[this EarthData forum post](https://forum.earthdata.nasa.gov/viewtopic.php?t=3912)
+:::
 
 ### band labels
 One thing that makes it harder to get up and running with the HLS data is that
@@ -205,15 +234,7 @@ Without any modifications, some of the bands would get scrambled when combining
 data from the two collections.
 
 ```{python}
-# | code-fold: true
-import camelot
-
-tables = camelot.read_pdf(
-    "https://lpdaac.usgs.gov/documents/1326/HLS_User_Guide_V2.pdf", pages="6"
-)
-band_df = tables[0].df
-band_df.columns = band_df.iloc[0].str.replace("\n", "")
-band_df = band_df.drop(band_df.index[0])
+# | echo: false
 band_df
 ```
 
@@ -273,78 +294,20 @@ stac_items = catalog.search(
 ```
 
 ### modify the asset labels
-Now we use the crosswalk to rename the STAC item asset labels to pave the way
-for `stackstac` to load the data in the best way.
+We can use the crosswalk to rename the STAC item asset labels to pave the way
+for `stackstac` to load the data in the most convenient and straightforward way.
 There are ways to do this after you load the data using
-`xarray.DataArray.assign_coords`, but I find this approach more intuitive.
+`xarray.DataArray.assign_coords`, but I find the STAC item metadata alteration
+approach more intuitive.
 ```{python}
 for item in stac_items:
     for original_band, new_band in BAND_CROSSWALK.get(item.collection_id).items():
         item.assets[new_band] = item.assets.pop(original_band)
-
-
 ```
 
-### cloud/shadow masking
-The `Fmask` band contains all of the pixel quality information that we need to
-mask out invalid pixels from the images, but it takes a little bit of work.
-The quality information is stored in integer form that needs to get unpacked
-into bit-wise values to get binary values for seven attributes
-See Appendix A of the
-[HLS User Guide](https://lpdaac.usgs.gov/documents/1326/HLS_User_Guide_V2.pdf)
-for more details.
-
-Here is a function that we can use to get all of the integer values that meet
-several quality criteria:
-```{python}
-def get_valid_fmask_ints(valid_conditions: dict):
-    # enumerate all possible eight digit binary values
-    all_binary_values = list(itertools.product([0, 1], repeat=8))
-
-    mapping = {
-        "aerosol": slice(0, 2),
-        "water": 2,
-        "snow_ice": 3,
-        "cloud_shadow": 4,
-        "adjacent_to_cloud_shadow": 5,
-        "cloud": 6,
-        "cirrus": 7,
-    }
-
-    valid_ints = []
-    for binary_value in all_binary_values:
-        n_acceptable = 0
-        for key, acceptable_value in valid_conditions.items():
-            if binary_value[mapping[key]] == acceptable_value:
-                n_acceptable += 1
-        # if all of the valid constraints are met, add this one to the list!
-        if n_acceptable == len(valid_conditions):
-            binary_str = "".join([str(val) for val in binary_value])
-            # use the int function with base=2 to convert the binary string
-            # to an integer
-            valid_ints.append(int(binary_str, base=2))
-
-    return valid_ints
-
-
-```
-
-Get the integer values that represent pixels that are not clouds,
-cloud shadows, or adjacent to clouds or shadows:
-```{python}
-valid_fmask_ints = get_valid_fmask_ints(
-    valid_conditions={"cloud_shadow": 0, "adjacent_to_cloud_shadow": 0, "cloud": 0}
-)
-```
-
-### get the cloud-free mosaic
-It is very easy to generate a cloud-free mosaic for a specific time range
-(e.g. monthly).
-For example, we can take the median value from all valid pixels within a given
-month with just a few lines of code.
-We are only looking at a single month here, but you could pass many months worth
-of STAC items to `stackstac.stack` and get a rich time series of cloud-free
-imagery using the exact same code.
+### load into a DataArray
+Use `stackstac.stack` to load the STAC items into a neatly packaged
+`xarray.DataArray`:
 ```{python}
 hls_stack_raw = stackstac.stack(
     stac_items,
@@ -354,14 +317,95 @@ hls_stack_raw = stackstac.stack(
     resolution=30,
     xy_coords="center",
 )
-
-hls_cloud_free = (
-    hls_stack_raw.where(hls_stack_raw.sel(band="Fmask").isin(valid_fmask_ints))
-    .resample(time="1M")
-    .median(skipna=True)
-    .compute()
-)
 ```
+
+### cloud/shadow masking
+The `Fmask` band contains all of the pixel quality information that we need to
+mask out invalid pixels from the images, but it takes a little bit of work.
+The quality information is stored in integer form but we can work with it using
+some binary tricks!
+
+```{python}
+# | echo: false
+import re
+
+for col in qa_df.keys():
+    qa_df[col] = [re.sub("\r?\n", "", x) for x in qa_df[col]]
+
+qa_df
+```
+
+We can use the 'bitwise OR' operator `|` and the 'zero fill left shift' operator
+`<<` to construct an integer representation of invalid pixels.
+For the cloud-free mosaic, we want to exclude any pixel that is marked (bit
+value = 1) as either a cloud (bit 1), adjacent to a cloud or shadow (bit 2), or a
+cloud shadow (bit 3).
+```{python}
+hls_mask_bitfields = [1, 2, 3]  # cloud shadow, adjacent to cloud shadow, cloud
+hls_bitmask = 0
+for field in hls_mask_bitfields:
+    hls_bitmask |= 1 << field
+
+print(hls_bitmask)
+```
+
+If we cast the result to a binary string you can see how that works:
+
+```{python}
+format(hls_bitmask, "08b")
+```
+
+When you translate the integer `14` into binary you get the ultimate invalid
+pixel!
+
+Next, we use 'bitwise AND' to identify pixels that have an invalid value in any
+of the bits that we care about.
+Any integer value that has the invalid value (1) in any of the specified bits
+(1, 2, and 3) will return a non-zero value when compared to `14` with the `&`
+operator:
+
+For example, a pixel where all bit values are zero will return zero because none
+of the bitwise 1 values are shared with our invalid mask value (14 aka
+00001110):
+```{python}
+int("00000000", 2) & 14
+```
+
+And a pixel that is marked as adjacent to a cloud or shadow (bit 2 = 1) will
+return 4 (2^2) because bit 2 has 1:
+```{python}
+int("00000100", 2) & 14
+```
+
+Fortunately for us, we can apply the bitwise operators on integer arrays!
+We can classify all pixels as either good or bad like this:
+```{python}
+fmask = hls_stack_raw.sel(band="Fmask").astype("uint16")
+hls_bad = fmask & hls_bitmask
+```
+
+Then we can set all invalid pixels (`hls_bad != 0`) to `NaN` like this:
+```{python}
+# mask pixels where any one of those bits are set
+hls_masked = hls_stack_raw.where(hls_bad == 0)
+```
+
+
+### get the cloud-free mosaic
+After we have eliminated the invalid pixels it is very easy to generate a 
+cloud-free mosaic for a specific time range (e.g. monthly).
+For example, we can take the median value from all non-cloud/non-cloud shadow
+pixels within a given month with just a few lines of code.
+
+```{python}
+# | warning: false
+# | message: false
+hls_cloud_free = hls_masked.resample(time="1M").median(skipna=True).compute()
+```
+
+We are only looking at a single month here, but you could pass many months worth
+of STAC items to `stackstac.stack` and get a rich time series of cloud-free
+imagery using the exact same method.
 
 Plot the image and bask in the cloud-free beauty:
 ```{python}
@@ -387,6 +431,14 @@ _ = (
 ```
 
 ## Compare to Sentinel 2 L2A and Landsat Collection 2 Level-2
+The Landsat Collection Level-2 and Sentinel 2 Level 2A datasets are available in
+Microsoft's Planetary Computer STAC.
+They are available in other STACs, too (e.g.
+[Element84's Earth Search Catalog](https://stacindex.org/catalogs/earth-search)),
+but the Planetary Computer catalog is really nice and the data are well-
+documented and have
+[examples attached](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a#Example-Notebook)
+to many of the available collections.
 
 ```{python original_sentinel}
 # | code-fold: true
@@ -394,11 +446,14 @@ _ = (
 # | message: false
 import planetary_computer
 
-element84_catalog = pystac_client.Client.open(
-    "https://earth-search.aws.element84.com/v0"
+
+planetary_computer_catalog = pystac_client.Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
 )
-sentinel_stac_items = element84_catalog.search(
-    collections=["sentinel-s2-l2a-cogs"],
+
+sentinel_stac_items = planetary_computer_catalog.search(
+    collections=["sentinel-2-l2a"],
     bbox=bbox_4326,
     datetime=[START_DATE, END_DATE],
 ).get_all_items()
@@ -436,15 +491,13 @@ sentinel_cloud_free = (
     .compute()
 )
 
-planetary_computer_catalog = pystac_client.Client.open(
-    "https://planetarycomputer.microsoft.com/api/stac/v1",
-    modifier=planetary_computer.sign_inplace,
-)
 landsat_stac_items = planetary_computer_catalog.search(
     collections=["landsat-c2-l2"],
     bbox=bbox_4326,
     datetime=[START_DATE, END_DATE],
+    query={"platform": {"neq": "landsat-7"}},  # skip Landsat 7 because stripes
 ).get_all_items()
+
 
 landsat_stack = stackstac.stack(
     items=landsat_stac_items,
@@ -453,6 +506,7 @@ landsat_stack = stackstac.stack(
     resolution=30,
     bounds=AOI.bounds,
     xy_coords="center",
+    band_coords=False,
 )
 
 # following https://stackstac.readthedocs.io/en/latest/examples/gif.html#Mask-cloudy-pixels-using-the-QA-band:
@@ -479,8 +533,8 @@ landsat_cloud_free = (
 ```
 
 Both of the original datasets are atmospherially corrected and represent surface
-surface reflectance, but the processed images are definitely not free of cloud
-artifacts!
+surface reflectance, but the processed images are definitely not free of cloud-
+or orbit artifacts!
 One of the greatest advantages of using the HLS dataset instead of the original
 sources is improved cloud masking.
 The HLS data undergo an entirely different process than the Landsat Collection
@@ -517,16 +571,15 @@ for stack in [sentinel_cloud_free, landsat_cloud_free, hls_cloud_free]:
             yticks=[],
         )
     )
-
 ```
 
 In the Sentinel 2 image you can clearly see some cloud haze scattered around
 most of the image.
-The Landsat image shows some stripy artifacts that are probably attributable to
-hazy clouds that were not masked from the original images.
+The Landsat image shows patchy artifacts that are probably attributable to hazy
+clouds that were not masked from the original images.
 Meanwhile, the HLS mosaic comes out crystal clear!
 
-## Analyze the Landsat and Sentinel collections separately
+## Analyze the HLS Landsat and Sentinel collections separately
 To illustrate the power of the full HLS dataset and the advantage of the
 high density of collections in a short time, lets load the imagery for each
 sensor separately and create a cloud-free mosaic for July 2022 for each one.
@@ -534,7 +587,6 @@ sensor separately and create a cloud-free mosaic for July 2022 for each one.
 ### get an array for each sensor
 
 ```{python}
-
 items_by_collection = {
     collection: pystac.ItemCollection(
         [item for item in stac_items if item.collection_id == collection]
@@ -565,7 +617,6 @@ for collection, collection_items in items_by_collection.items():
     )
 
     stacks_by_collection[collection] = flatten(raw_stack, dim="time")
-
 ```
 
 We can combine them along a new dimension called `sensor` to make it easy to
@@ -589,7 +640,7 @@ sensor_stack = sensor_stack.compute()
 The HLS data are organized by 100 km MGRS tiles, and there can be redundant 
 coverage by separate STAC items.
 We can clean this up by flattening the data out to have one observation per
-sensor per day
+sensor per day.
 ```{python}
 # a function to prepare the arrays for better plotting
 def flatten_by_day(x):
@@ -609,7 +660,7 @@ flattened_by_day = xr.concat(
 )
 ```
 
-Now when we plot the images we only have one observation per day per sensor.
+When we plot the images we only have one observation per day per sensor.
 ```{python}
 # | column: page
 # | warning: false
@@ -628,39 +679,27 @@ _ = flattened_by_day.sel(band=["red", "green", "blue"]).plot.imshow(
 )
 ```
 
-Now let's look at the raw `Fmask` values for all of the images.
-```{python}
-# | column: page
-# | warning: false
-# | message: false
-fmask = flattened_by_day.sel(band=["Fmask"]).squeeze(dim="band")
-_ = fmask.sel(sensor=["Landsat", "Sentinel"]).plot.imshow(
-    col="sensor",
-    row="time",
-    cmap="tab20",
-    size=4,
-    add_labels=False,
-    xticks=[],
-    yticks=[],
-)
-```
-
-We could interpret the values individually, but it looks like the dark blue and
-peach categories represent non-cloudy land and water respectively.
-
 
 Check out the valid/invalid binary values for each sensor/date:
 ```{python}
 # | warning: false
 # | message: false
 # | column: page
-_ = fmask.isin(valid_fmask_ints).plot.imshow(
-    col="sensor",
-    row="time",
-    size=4,
-    add_labels=False,
-    xticks=[],
-    yticks=[],
+has_data = flattened_by_day.sel(band="red").isnull() == False
+fmask = flattened_by_day.sel(band="Fmask").astype("uint16")
+hls_bad = (fmask & hls_bitmask).where(has_data > 0)
+
+_ = (
+    (hls_bad > 0)
+    .where(has_data > 0)
+    .plot.imshow(
+        col="sensor",
+        row="time",
+        size=4,
+        add_labels=False,
+        xticks=[],
+        yticks=[],
+    )
 )
 ```
 
@@ -686,7 +725,19 @@ Would we have at least one valid observation for every pixel?
 # | warning: false
 # | message: false
 # | column: page
-has_valid = full_stack.sel(band="Fmask").isin(valid_fmask_ints).any(dim="time")
+
+# is there a non-na spectral observation?
+has_data = full_stack.sel(band="red") > 0
+
+# is the pixel invalid by our Fmask criteria?
+fmask = full_stack.sel(band="Fmask").astype("uint16")
+is_bad = fmask & hls_bitmask
+
+# if not invalid and has non-na value it is valid
+valid = (is_bad == 0).astype("float64").where(has_data > 0)
+
+# are there any valid pixels in the time series?
+has_valid = (valid > 0).any(dim="time")
 _ = has_valid.plot.imshow(
     col="sensor",
     size=4,
@@ -707,16 +758,13 @@ nearly have full coverage if we use the combined set!
 By combining the sensors we reduce the number of pixels with no valid
 observations from hundreds down to only three!
 
-
 Get cloud-free mosaic for each sensor and the combined set side-by-side.
 ```{python}
 # | warning: false
 # | message: false
 # | column: page
 # | layout: "[-0.1, 0.8, -0.1]"
-sensor_cloud_free = full_stack.where(
-    full_stack.sel(band="Fmask").isin(valid_fmask_ints)
-).median(dim="time", skipna=True)
+sensor_cloud_free = full_stack.where(is_bad == 0).median(dim="time", skipna=True)
 
 _ = sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
     col="sensor",
@@ -732,7 +780,6 @@ _ = sensor_cloud_free.sel(band=["red", "green", "blue"]).plot.imshow(
 
 ```
 
-If you look closely, you can see some cloud artifacts in each of the Landsat-
-and Sentinel-only panels, but the mosaic derived from both data sources looks
-totally cloud-free.
-That is why you are going to love HLS.
+This demonstrates that combining the time series of observations from each of
+the sensor arrays gives you superior ingredients for cloud-free mosaic products
+than using either of the sensors independently.
