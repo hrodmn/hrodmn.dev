@@ -398,6 +398,8 @@ For example, we can take the median value from all non-cloud/non-cloud shadow
 pixels within a given month with just a few lines of code.
 
 ```{python}
+# | warning: false
+# | message: false
 hls_cloud_free = hls_masked.resample(time="1M").median(skipna=True).compute()
 ```
 
