@@ -102,7 +102,7 @@ pycparser==2.21
 pydantic==1.10.6
 Pygments==2.14.0
 pyparsing==3.0.9
-pypdf==3.5.2
+pypdf==3.8.1
 PyPDF2<3.0.0
 pyproj==3.4.1
 pyrsistent==0.19.3
