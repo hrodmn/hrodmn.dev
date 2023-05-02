@@ -5,7 +5,13 @@ date: "3/5/2023"
 filters:
    - include-code-files
 image: "postgrest.webp"
-
+keywords: 
+  - PostGIS
+  - PostgREST
+  - PostgreSQL
+categories:
+  - python
+  - postgis
 ---
 
 ## Introduction

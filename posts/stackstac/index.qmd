@@ -2,6 +2,15 @@
 title: "STAC + stackstac + xarray"
 date: "2/18/2023"
 image: "best_day.png"
+keywords: 
+  - STAC
+  - python
+  - cloud-native geospatial
+  - xarray
+  - stackstac
+categories:
+  - python
+  - cloud
 ---
 
 [`stackstac`](https://github.com/gjoseph92/stackstac) is a python package for
