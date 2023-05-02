@@ -1,0 +1,93 @@
+---
+title: "NASA S3 compute location test"
+subtitle: "spoiler: do everything in us-west-2!"
+date: "5/1/2023"
+image: "cloud-native.jpg"
+fig-cap-location: top
+filters:
+  - include-code-files
+keywords: 
+  - NASA
+  - AWS
+  - S3
+  - STAC
+  - python
+  - cloud-native geospatial
+categories:
+  - python
+  - cloud
+---
+
+One of the main principles of the cloud-native geospatial movement is bringing
+compute operations as "close" to the raw data as possible.
+Since the storage location of most data is out of your control, it is worth your
+time to pick a compute environment that will minimize the time spent reading
+data from cloud storage!
+
+I tested the run time performance of a basic raster read operation from a
+handful of compute environments so you can see what difference it makes:
+
+## Key Takeaways
+
+1. Spend some time to find out which region the data are stored in and do your 
+compute on machines located in the same region!
+Read operations on NASA's Earthdata catalog are **2x faster** if you run them in 
+the same region as the storage bucket (us-west-2) than if you run them in a
+different region (e.g. us-east-1)!
+
+2. You may get a slight performance boost by accessing the data directly from
+S3 URIs (e.g. s3://lp-prod-protected/path/to/B04.tif) instead of the https links
+(e.g. https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/path/to/B04.tif), but it doesn't make a huge difference.
+
+
+## Test results
+[nasa_s3_test.py](./nasa_s3_test.py) queries the Harmonized Landsat Sentinel
+(HLS) STAC collections and reads a year's worth of data for a small area.
+
+**local**
+
+Running this on my laptop takes about one minute, which doesn't seem to bad for
+reading a whole year's worth of data!
+```sh
+$ python nasa_s3_test.py --method="default"
+> average run time: 56.97
+```
+
+**us-east-1**
+
+The read operation takes only 16 seconds if we run it on an EC2 instance in
+us-east-1 - that's fast, right?
+
+```sh
+$ python nasa_s3_test.py --method="default"
+> average run time: 16.06
+```
+
+**us-west-2**
+
+Running it in the native region for the raster data brings it down to 8 seconds!
+```sh
+$ python nasa_s3_test.py --method="default"
+> average run time: 8.08
+```
+
+**us-west-2 with S3 URIs**
+
+NASA suggests that reading data using the S3 URIs might give you a significant 
+performance boost, but in this test the speed advantage is relatively minor
+(0.25 seconds).
+It takes a little more work to get the S3 credentials then modify the hrefs for
+the assets, but it's not very hard. Check out this
+[tutorial from NASA](https://nasa-openscapes.github.io/2021-Cloud-Hackathon/tutorials/05_Data_Access_Direct_S3.html)
+for more context.
+
+```sh
+$ python nasa_s3_test.py --method="direct_from_s3"
+> direct_from_s3 average run time: 7.74
+```
+
+**Test script**:
+
+```{.python include="nasa_s3_test.py"}
+```
+
