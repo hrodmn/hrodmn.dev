@@ -4,6 +4,16 @@ date: "2/24/2023"
 date-modified: "3/20/2023"
 image: "hls.png"
 fig-cap-location: top
+keywords: 
+  - NASA
+  - remote sensing
+  - Harmonized Landsat Sentinel
+  - STAC
+  - python
+  - cloud-native geospatial
+categories:
+  - python
+  - cloud
 ---
 
 The [Harmonized Landsat Sentinel 2 (HLS) dataset](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/)
