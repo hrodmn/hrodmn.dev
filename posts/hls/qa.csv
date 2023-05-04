@@ -1,0 +1,16 @@
+Bit number,Mask name,Bit value,Mask description
+6-7,aerosol level,11,High aerosol
+,,10,Moderate aerosol
+,,01,Low aerosol
+,,00,Climatology aerosol
+5,Water,1,Yes
+,,0,No
+4,Snow/ice,1,Yes
+,,0,No
+3,Cloud shadow,1,Yes
+,,0,No
+2,Adjacent to cloud/shadow,1,Yes
+,,0,No
+1,Cloud,1,Yes
+,,0,No
+0,Cirrus,"Reserved, but not used",NA
