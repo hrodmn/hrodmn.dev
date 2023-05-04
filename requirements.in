@@ -2,8 +2,11 @@ click
 folium
 geojson_pydantic
 geopandas
+ipykernel
+ipython
+ipywidgets
 jupyter-cache
-jupyter-client<8.1
+jupyter-client
 pandas
 planetary_computer
 pre-commit
