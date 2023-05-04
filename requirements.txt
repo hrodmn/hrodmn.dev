@@ -80,7 +80,7 @@ jsonschema==4.17.3
     # via nbformat
 jupyter-cache==0.6.1
     # via -r requirements.in
-jupyter-client==8.1.0
+jupyter-client==8.0.3
     # via
     #   -r requirements.in
     #   nbclient

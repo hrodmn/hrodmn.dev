@@ -3,7 +3,7 @@ folium
 geojson_pydantic
 geopandas
 jupyter-cache
-jupyter-client<8.2
+jupyter-client<8.1
 pandas
 planetary_computer
 pre-commit
