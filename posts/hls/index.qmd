@@ -63,7 +63,10 @@ for more details on the process for generating the HLS data.
 
 ```{python}
 # | echo: false
+# | eval: false
 # read some tables from the HLS User Guide
+import re
+
 import camelot
 
 tables = camelot.read_pdf(
@@ -78,6 +81,11 @@ for df in [band_df, qa_df]:
     df.columns = df.iloc[0].str.replace("\n", "")
     df.drop(df.index[0], inplace=True)
 
+for col in qa_df.keys():
+    qa_df[col] = [re.sub("\r?\n", "", x) for x in qa_df[col]]
+
+band_df.to_csv("/home/henry/workspace/hrodmn.dev/posts/hls/bands.csv", index=False)
+qa_df.to_csv("/home/henry/workspace/hrodmn.dev/posts/hls/qa.csv", index=False)
 ```
 
 ## Get organized
@@ -245,7 +253,7 @@ data from the two collections.
 
 ```{python}
 # | echo: false
-band_df
+pd.read_csv("bands.csv")
 ```
 
 To avoid this headache, we can make define a crosswalk dictionary that will make
@@ -337,12 +345,7 @@ some binary tricks!
 
 ```{python}
 # | echo: false
-import re
-
-for col in qa_df.keys():
-    qa_df[col] = [re.sub("\r?\n", "", x) for x in qa_df[col]]
-
-qa_df
+pd.read_csv("qa.csv").fillna("")
 ```
 
 We can use the 'bitwise OR' operator `|` and the 'zero fill left shift' operator

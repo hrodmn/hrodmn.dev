@@ -1,0 +1,6 @@
+repos:
+  - repo: https://github.com/MartinThoma/check-pip-compile
+    rev: 0.1.0
+    hooks:
+    - id: check-pip-compile
+      args: ['.']  # it's recommended to specify the files you want

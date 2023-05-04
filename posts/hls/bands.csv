@@ -1,0 +1,16 @@
+Band name,OLI band number,MSI band number,HLS band code name L8,HLS band code name S2,Wavelength (micrometers)
+Coastal Aerosol,1,1,B01,B01,0.43 – 0.45*
+Blue,2,2,B02,B02,0.45 – 0.51*
+Green,3,3,B03,B03,0.53 – 0.59*
+Red,4,4,B04,B04,0.64 – 0.67*
+Red-Edge 1,–,5,–,B05,0.69 – 0.71**
+Red-Edge 2,–,6,–,B06,0.73 – 0.75**
+Red-Edge 3,–,7,–,B07,0.77 – 0.79**
+NIR Broad,–,8,–,B08,0.78 –0.88**
+NIR Narrow,5,8A,B05,B8A,0.85 – 0.88*
+SWIR 1,6,11,B06,B11,1.57 – 1.65*
+SWIR 2,7,12,B07,B12,2.11 – 2.29*
+Water vapor,–,9,–,B09,0.93 – 0.95**
+Cirrus,9,10,B09,B10,1.36 – 1.38*
+Thermal Infrared 1,10,–,B10,–,10.60 – 11.19*
+Thermal Infrared 2,11,–,B11,–,11.50 – 12.51*
