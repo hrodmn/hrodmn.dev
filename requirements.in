@@ -5,6 +5,7 @@ geopandas
 jupyter-cache
 pandas
 planetary_computer
+pre-commit
 pyproj
 pystac
 pystac_client
