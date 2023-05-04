@@ -1,0 +1,15 @@
+click
+folium
+geojson_pydantic
+geopandas
+jupyter-cache
+pandas
+planetary_computer
+pyproj
+pystac
+pystac_client
+rasterio
+requests
+shapely
+stackstac
+xarray
