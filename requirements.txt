@@ -111,7 +111,7 @@ jsonschema==4.17.3
     # via nbformat
 jupyter-cache==0.6.1
     # via -r requirements.in
-jupyter-client==8.0.3
+jupyter-client==8.2.0
     # via
     #   -r requirements.in
     #   ipykernel
