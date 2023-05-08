@@ -78,7 +78,7 @@ fsspec==2023.4.0
     # via dask
 geojson-pydantic==0.5.0
     # via -r requirements.in
-geopandas==0.12.2
+geopandas==0.13.0
     # via -r requirements.in
 greenlet==2.0.2
     # via sqlalchemy
