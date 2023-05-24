@@ -61,33 +61,32 @@ geospatial data.
     thousands of user-submitted property boundaries
   * NCX's SpatioTemporal Asset Catalog (STAC)
 * Deployed machine learning and Bayesian statistical models in production
+  * Python: pytorch, fastai, tsai
+  * R: brms
 * Distributed data products to the NCX Platform Team for consumption on NCX's 
   Landowner Platform
+* Maintained unit testing and CI/CD for multiple Python packages and processing 
+  workflows in GitHub actions
+* Managed and deployed the docker images used for development within the NCX
+  data team
+* Deployed serverless infrastructure for the STAC API and tiling services in
+  AWS using CloudFormation, RDS, and Lambda
+* Explored emerging technologies for analyzing and processing geospatial data
+  and deployed them into production pipelines and platforms
+  * e.g. eoAPI, titiler-pgstac, stac-fastapi, stackstac, xarray
 
 **Forest Biometrician** SilviaTerra, Remote | June 2016 - December 2020
 
-- Developed processes for generating forest inventory data using ground
+* Developed processes for generating forest inventory data using ground
   measurements paired with remote sensing data
-- Operated the cloud computing platform to generate forest inventory estimates
-  for millions of acres
-- Communicated with industrial forest management companies to understand their 
+  * built and maintained a suite of Python and R packages for processing remote
+    sensing data and rendering model predictions.
+  * implemented rigorous statistical methods for generating model-assisted
+    estimates of forest structure
+* Operated and configured the cloud computing infrastucture to generate forest
+  inventory estimates for millions of acres
+* Communicated with industrial forest management companies to understand their 
   forest inventory data needs
-
-## Skills
-- **programming languages**: Python, R
-- **operating systems**: Ubuntu
-- **operational tools**: git, Docker, dask.distributed, Hadoop + MapReduce (AWS
-    EMR, Azure HDInsight)
-- **geospatial tools**: 
-  * GDAL, STAC, PostGIS
-  * Python packages: pystac, stac-fastapi, pgstac, xarray, dask, rasterio 
-    shapely, pandas, geopandas, pytest
-  * R packages: sf, stars, brms, dplyr, tidyr, purrr, furrr
-- **cloud environments**: AWS and Azure
-- **CI/CD**: GitHub Actions
-- **code review**: GitHub pull requests
-- **project management**: Asana
-
 
 ## Education
 
