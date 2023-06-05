@@ -94,7 +94,7 @@ ipykernel==6.22.0
     # via
     #   -r requirements.in
     #   ipywidgets
-ipython==8.13.1
+ipython==8.14.0
     # via
     #   -r requirements.in
     #   ipykernel
