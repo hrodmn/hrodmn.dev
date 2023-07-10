@@ -90,7 +90,7 @@ importlib-metadata==6.6.0
     # via
     #   dask
     #   jupyter-cache
-ipykernel==6.22.0
+ipykernel==6.24.0
     # via
     #   -r requirements.in
     #   ipywidgets
