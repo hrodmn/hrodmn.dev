@@ -268,8 +268,8 @@ BAND_CROSSWALK = {
         "B03": "green",
         "B04": "red",
         "B05": "nir narrow",
-        "B06": "swir1",
-        "B07": "swir2",
+        "B06": "swir 1",
+        "B07": "swir 2",
         "B09": "cirrus",
         "B10": "thermal infrared 1",
         "B11": "thermal",
@@ -308,7 +308,7 @@ stac_items = catalog.search(
     collections=HLS_COLLECTION_IDS,
     bbox=bbox_4326,
     datetime=[START_DATE, END_DATE],
-).get_all_items()
+).item_collection()
 ```
 
 ### modify the asset labels
