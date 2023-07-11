@@ -14,7 +14,7 @@ about:
       href: https://www.linkedin.com/in/hrodmn
     - icon: mastodon
       text: mastodon
-      href: https://mas.to/@hrodmn
+      href: https://fosstodon.org/@hrodmn
     - icon: envelope
       text: email
       href: mailto:henry.rodman@gmail.com
