@@ -14,4 +14,4 @@ have learned to use them more effectively! Most of the code that I write is in
 private repositories so this is one way that I can share a bit about what I do
 and what interests me.
 
-<a rel="me" href="https://mas.to/@hrodmn"></a>
+<a rel="me" href="https://fosstodon.org/@hrodmn"></a>
