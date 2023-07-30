@@ -32,7 +32,7 @@ format-links: false
 
 \website{www.hrodmn.dev} \ | \ \email{henry.rodman@gmail.com} \ | \ \phone{612-845-7637} \ | \ \location{Duluth, MN}
 
-\github{hrodmn} \ | \ \linkedin{hrodmn} \ | \ \mastodon{mas.to/@hrodmn} \ | \twitter{hrodmn}
+\github{hrodmn} \ | \ \linkedin{hrodmn} \ | \ \mastodon{fosstodon.org/@hrodmn} \ | \twitter{hrodmn}
 
 :::
 
