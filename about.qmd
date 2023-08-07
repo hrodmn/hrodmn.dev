@@ -65,8 +65,8 @@ geospatial data.
   * R: brms
 * Distributed data products to the NCX Platform Team for consumption on NCX's 
   Landowner Platform
-* Maintained unit testing and CI/CD for multiple Python packages and processing 
-  workflows in GitHub actions
+* Maintained unit testing and CI/CD for multiple Python + R packages and 
+  associated processing workflows in GitHub actions
 * Managed and deployed the docker images used for development within the NCX
   data team
 * Deployed serverless infrastructure for the STAC API and tiling services in
