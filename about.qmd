@@ -38,7 +38,7 @@ format-links: false
 
 ::: {.content-visible when-format="html"}
 
-I am a data engineer at [NCX](https://ncx.com) where I write code to run our
+I am a software engineer at [NCX](https://ncx.com) where I write code to run our
 natural capital marketplace.
 My educational background is in forestry and statistics, but I have spent most
 of the last decade honing my programming skills on the job at NCX (formerly
@@ -50,16 +50,30 @@ geospatial data.
 
 ## Experience
 
+**Senior Software Engineer** NCX, Remote | December 2023 - present
+
+* Designed and maintained a network of live applications that serve the NCX
+  platform
+  * FastAPI application that accepts requests from users via a front-end
+    application
+  * several HTML/Javascript templates for serving interactive maps using MapLibre
+    and Mapbox
+* Deployed infrastructure-as-code for geospatial data processing pipelines and
+  associated APIs using AWS CloudFormation
+  * PostgreSQL, EC2, Lambda, pgstac, titiler-pgstac, PostGIS, sqlalchemy
+
 **Data Engineer** NCX, Remote | January 2021 - present
 
 * Built and maintained multiple pipelines for processing and organizing
   geospatial data:
+  * PostGIS-powered property assessment pipeline for assessing suitability for
+    natural resource development and conservation projects
+  * NCX's SpatioTemporal Asset Catalog (STAC)
   * model training- and prediction pipeline for combining public satellite  
     imagery datasets and ground measurements to predict forest vegetation
     structure for the contiguous US
   * forest carbon assessment pipeline capable of concurrently processing
     thousands of user-submitted property boundaries
-  * NCX's SpatioTemporal Asset Catalog (STAC)
 * Deployed machine learning and Bayesian statistical models in production
   * Python: pytorch, fastai, tsai
   * R: brms
@@ -67,22 +81,12 @@ geospatial data.
   Landowner Platform
 * Maintained unit testing and CI/CD for multiple Python + R packages and 
   associated processing workflows in GitHub actions
-* Managed and deployed the docker images used for development within the NCX
-  data team
-* Deployed serverless infrastructure for the STAC API and tiling services in
-  AWS using CloudFormation, RDS, and Lambda
-* Explored emerging technologies for analyzing and processing geospatial data
-  and deployed them into production pipelines and platforms
-  * e.g. eoAPI, titiler-pgstac, stac-fastapi, stackstac, xarray
+
 
 **Forest Biometrician** SilviaTerra, Remote | June 2016 - December 2020
 
 * Developed processes for generating forest inventory data using ground
   measurements paired with remote sensing data
-  * built and maintained a suite of Python and R packages for processing remote
-    sensing data and rendering model predictions.
-  * implemented rigorous statistical methods for generating model-assisted
-    estimates of forest structure
 * Operated and configured the cloud computing infrastucture to generate forest
   inventory estimates for millions of acres
 * Communicated with industrial forest management companies to understand their 

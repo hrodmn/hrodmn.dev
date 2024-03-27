@@ -8,6 +8,7 @@
 \usepackage{titlesec}
 \usepackage{fontawesome5}
 \usepackage{hyperref}
+\usepackage{enumitem}
 
 %% Set page size with margin
 \geometry{a4paper, total={170mm,257mm}, left=10mm, top=10mm, bottom=10mm, right=30mm}
@@ -56,6 +57,12 @@
 \end{flushleft}\egroup
 }
 \makeatother
+
+% reduce whitespace around subsections
+\titlespacing*{\subsection}{0pt}{0.5\baselineskip}{0.5\baselineskip}
+
+% reduce space around bulleted lists
+\setlist[itemize]{topsep=0pt, itemsep=0pt}
 
 % social media functions
 \makeatletter
