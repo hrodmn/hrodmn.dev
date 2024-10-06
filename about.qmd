@@ -38,10 +38,9 @@ format-links: false
 
 ::: {.content-visible when-format="html"}
 
-I am a software engineer at [NCX](https://ncx.com) where I write code to run our
-natural capital marketplace.
+I am a cloud engineer at [Development Seed](https://developmentseed.org) where I write code to make geospatial data more accessible to all users.
 My educational background is in forestry and statistics, but I have spent most
-of the last decade honing my programming skills on the job at NCX (formerly
+of the last decade honing my programming skills on the job at Development Seed and NCX (formerly
 SilviaTerra).
 My programming specialty is building clean and elegant systems for processing
 geospatial data.
@@ -50,7 +49,10 @@ geospatial data.
 
 ## Experience
 
-**Senior Software Engineer** NCX, Remote | December 2023 - present
+**Cloud Engineer** Development Seed | May 2024 - Present
+
+
+**Senior Software Engineer** NCX, Remote | December 2023 - May 2024
 
 * Designed and maintained a network of live applications that serve the NCX
   platform

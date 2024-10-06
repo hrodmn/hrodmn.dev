@@ -2,6 +2,7 @@
 title: "PostgREST + PostGIS"
 subtitle: "How to set up a geospatial-capable REST API for your PostGIS database."
 date: "3/5/2023"
+date-modified: "10/6/2024"
 filters:
    - include-code-files
 image: "postgrest.webp"
@@ -142,7 +143,7 @@ Build the docker network:
   POSTGRES_PASS=password \
   POSTGRES_DB=postgrestgis \
   POSTGRESTGIS_PORT=25432 \
-  docker-compose up -d
+  docker compose up -d
 
 # pause to make sure the docker network gets up and running before we run any
 # queries
@@ -217,11 +218,13 @@ import geojson_pydantic
 
 center = ((bbox[1] + bbox[3]) / 2, (bbox[0] + bbox[2]) / 2)
 
-m = folium.Map(location=center, tiles="Stamen Toner", zoom_start=7)
+m = folium.Map(location=center, zoom_start=7)
 
 # add bounding box to map
 bbox_geojson = folium.GeoJson(
     data=geojson_pydantic.Feature(
+        type="Feature",
+        properties={},
         geometry=geojson_pydantic.Polygon.from_bounds(*bbox)
     ).dict(exclude_none=True),
     style_function=lambda x: {
@@ -250,7 +253,7 @@ definitely check out the full documentation.
 ```{python}
 # | echo: false
 # | output: false
-!docker stop postgrestgis_server_1 postgrestgis_db_1
+!docker compose down
 ```
 
 

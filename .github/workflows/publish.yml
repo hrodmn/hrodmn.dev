@@ -14,29 +14,27 @@ jobs:
       cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v2 
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Install system dependencies
+        run: sudo apt update && sudo apt install ghostscript python3-tk
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
           tinytex: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-          cache: 'pip'
-      
-      - name: Set up docker
-        uses: docker-practice/actions-setup-docker@1.0.11
-        timeout-minutes: 12
-
-      - name: Install system dependencies
-        run: sudo apt update && sudo apt install ghostscript python3-tk
-
-      - name: Install Python packages
-        run: pip install -r requirements.txt
 
       - name: Make .netrc
         env:
@@ -55,7 +53,8 @@ jobs:
           GDAL_DISABLE_READDIR_ON_OPEN: YES
           GDAL_HTTP_COOKIEJAR: /tmp/cookies.txt
           GDAL_HTTP_COOKIEFILE: /tmp/cookies.txt
-        uses: quarto-dev/quarto-actions/render@v2
+        run: |
+          uv run quarto render
 
       - name: Publish 
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

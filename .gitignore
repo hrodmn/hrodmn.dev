@@ -3,3 +3,5 @@
 /env/
 **/.jupyter_cache/**
 /hidden*
+**/.ipynb_checkpoints/**
+hrodmn.dev.egg-info/
