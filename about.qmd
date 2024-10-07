@@ -64,7 +64,7 @@ geospatial data.
   associated APIs using AWS CloudFormation
   * PostgreSQL, EC2, Lambda, pgstac, titiler-pgstac, PostGIS, sqlalchemy
 
-**Data Engineer** NCX, Remote | January 2021 - present
+**Data Engineer** NCX, Remote | January 2021 - December 2023
 
 * Built and maintained multiple pipelines for processing and organizing
   geospatial data:
