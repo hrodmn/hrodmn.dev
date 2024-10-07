@@ -1,6 +1,7 @@
 ---
 title: "STAC + stackstac + xarray"
 date: "2/18/2023"
+date-modified: "10/6/2024"
 image: "best_day.png"
 keywords: 
   - STAC
@@ -40,8 +41,8 @@ from shapely.geometry import box
 from shapely.ops import transform
 
 # STAC connection information for Sentinel 2 COGs
-STAC_URL = "https://earth-search.aws.element84.com/v0"
-STAC_COLLECTION = "sentinel-s2-l2a-cogs"
+STAC_URL = "https://earth-search.aws.element84.com/v1"
+STAC_COLLECTION = "sentinel-2-l2a"
 
 # spatial projection information
 CRS_STRING = "epsg:5070"
@@ -52,7 +53,7 @@ AOI = box(373926, 2744693, 406338, 2765304)
 
 # a few more parameters
 RESOLUTION = 100  # meters
-BANDS = ["B04", "B03", "B02"]
+BANDS = ["red", "green", "blue"]
 START_DATE = "2022-09-01"
 END_DATE = "2022-09-30"
 ```
@@ -81,7 +82,7 @@ stac_items = catalog.search(
     collections=[STAC_COLLECTION],
     bbox=bbox_4326,
     datetime=[START_DATE, END_DATE],
-).get_all_items()
+).item_collection()
 ```
 
 The query yields many STAC items, each of which describes multiple COGs (one per
@@ -171,14 +172,14 @@ autumn on the North Shore of Lake Superior!
 
 ```{python}
 # | column: screen
-flat_stack.sel(band=["B04", "B03", "B02"]).plot.imshow(
+flat_stack.sel(band=BANDS).plot.imshow(
     col="time",
     col_wrap=4,
     rgb="band",
     robust=True,
     size=4,
-    vmin=0,
-    vmax=1000,
+    vmin=-0.1,
+    vmax=-0.01,
     add_labels=False,
 )
 ```
@@ -186,12 +187,12 @@ flat_stack.sel(band=["B04", "B03", "B02"]).plot.imshow(
 I remember it being cloudy last fall but damn we had a couple of nice days!
 Apparently September 28 was a really good one.
 ```{python}
-flat_stack.sel(band=["B04", "B03", "B02"], time="2022-09-28").plot.imshow(
+flat_stack.sel(band=BANDS, time="2022-09-28").plot.imshow(
     rgb="band",
     robust=True,
     size=5,
-    vmin=0,
-    vmax=1000,
+    vmin=-0.1,
+    vmax=-0.01,
     add_labels=False,
 )
 ```
