@@ -26,4 +26,12 @@ dependencies = [
     "shapely>=2.0.6",
     "stackstac>=0.5.1",
     "xarray>=2024.9.0",
+    "jupyterlab>=4.2.5",
+    "ruff>=0.6.9",
+    "nbqa>=1.9.0",
+    "isort>=5.13.2",
+    "jupyterlab-code-formatter>=3.0.2",
 ]
+
+[tool.isort]
+profile = "black"
